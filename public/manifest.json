@@ -1,0 +1,18 @@
+{
+	"manifest_version": 3,
+	"name": "twinkleding",
+	"version": "1.0.0",
+	"description": "asas",
+	"author": "asd",
+	"icons": {
+		"16": "./img/logo.JPG",
+		"48": "./img/logo.JPG"
+	},
+	"chrome_url_overrides": {
+		"newtab": "./index.html"
+	},
+	"content_scripts": [ {
+		"matches": [ "https://*.twinkleding.top/*" ],
+		"js": [ "./assets/index-0c3cd7a4.js" ]
+	} ]
+}

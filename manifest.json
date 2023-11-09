@@ -1,0 +1,18 @@
+{
+	"manifest_version": 3,
+	"name": "twinkleding",
+	"version": "1.0.0",
+	"description": "asas",
+	"author": "asd",
+	"icons": {
+		"16": "guo.jpg",
+		"48": "guo.jpg"
+	},
+	"chrome_url_overrides": {
+		"newtab": "./index.html"
+	},
+	"content_scripts": [ {
+		"matches": [ "https://*.twinkleding.top/*" ],
+		"js": [ "vue@3.3.7.global.js", "jquery-3.7.1.min.js", "index.js" ]
+	} ]
+}
