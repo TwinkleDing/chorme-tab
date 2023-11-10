@@ -3,7 +3,13 @@
     <div id="box" ref="box" class="book" @mousedown="boxDown" @mouseup="boxUp">
       <div class="weather">{{ weather }}</div>
       <div class="book-input">
-        <input ref="input" type="text" @keyup.enter.native="enter" />
+        <input
+          v-model="searchValue"
+          ref="input"
+          placeholder="在百度中搜索，或者输入网址"
+          type="text"
+          @keyup.enter.native="enter"
+        />
       </div>
       <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
         <img :src="item.icon" alt="" />
@@ -15,7 +21,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 const box = ref();
-const input = ref();
 const boxMove = ref(false);
 const startX = ref(0);
 const startY = ref(0);
@@ -27,31 +32,17 @@ const bookList = ref([
     icon: "https://www.baidu.com/img/bd_logo1.png",
   },
   {
-    title: "百度",
-    href: "http://www.baidu.com",
-    icon: "./img/guo2.jpg",
+    title: "有道翻译",
+    href: "https://fanyi.youdao.com",
+    icon: "https://ydlunacommon-cdn.nosdn.127.net/1ed7a7858eabd4d407370a83d9209838.png",
   },
   {
-    title: "百度",
-    href: "http://www.baidu.com",
-  },
-  {
-    title: "百度",
-    href: "http://www.baidu.com",
-  },
-  {
-    title: "百度",
-    href: "http://www.baidu.com",
-  },
-  {
-    title: "百度",
-    href: "http://www.baidu.com",
-  },
-  {
-    title: "百度",
-    href: "http://www.baidu.com",
+    title: "DOTA2贴吧",
+    href: "https://tieba.baidu.com/f?ie=utf-8&kw=dota2&fr=search",
+    icon: "/img/guo2.jpg",
   },
 ]);
+const searchValue = ref("");
 
 const boxDown = (e) => {
   if (e.target.id === "box") {
@@ -72,9 +63,13 @@ const boxUp = (e) => {
 const goBook = (e) => {
   window.open(e);
 };
-const enter = () => {
-  window.open("http://www.baidu.com/s?wd=" + input.value.value);
-  input.value.value = "";
+const enter = (e) => {
+  if (searchValue.value.startsWith("http://") || searchValue.value.startsWith("www.")) {
+    window.open(searchValue.value);
+    return;
+  }
+  window.open("http://www.baidu.com/s?wd=" + searchValue.value);
+  searchValue.value = "";
 };
 const getWeather = () => {
   // 查询雁塔实时天气
@@ -104,14 +99,10 @@ onMounted(() => {
   height: 100%;
   width: 100%;
   position: relative;
-}
-
-#page {
   background-image: url("/img/guo.jpg");
   background-size: 100% auto;
   color: #fff;
 }
-
 #box {
   height: 402px;
   width: 622px;
@@ -135,17 +126,18 @@ onMounted(() => {
   height: 40px;
   margin-bottom: 20px;
   padding: 0 20px;
-}
-
-.book-input input {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  outline: 0;
-  font-size: 18px;
-  padding: 0 20px;
-  border-radius: 20px;
-  box-sizing: border-box;
+  input {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    outline: 0;
+    font-size: 18px;
+    padding: 0 20px;
+    border-radius: 20px;
+    box-sizing: border-box;
+    background:#ffffff66;
+    border: 1px solid #ffffffaa;
+  }
 }
 
 .book-item {
@@ -153,17 +145,16 @@ onMounted(() => {
   width: 100px;
   height: 140px;
   text-align: center;
-  border: 1px solid #eee;
+  // border: 1px solid #eee;
   border-radius: 10%;
   margin-left: 20px;
   margin-bottom: 10px;
-}
-
-.book-item img {
-  height: 80px;
-  width: 80px;
-  border-radius: 50%;
-  margin: 10px 0;
+  img {
+    height: 80px;
+    width: 80px;
+    border-radius: 50%;
+    margin: 10px 0;
+  }
 }
 
 .book-title {
