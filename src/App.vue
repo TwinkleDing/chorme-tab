@@ -135,8 +135,8 @@ onMounted(() => {
     padding: 0 20px;
     border-radius: 20px;
     box-sizing: border-box;
-    background:#ffffff66;
-    border: 1px solid #ffffffaa;
+    // background:#ffffff66;
+    // border: 1px solid #ffffffaa;
   }
 }
 
