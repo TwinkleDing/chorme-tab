@@ -11,8 +11,10 @@
 	"chrome_url_overrides": {
 		"newtab": "./index.html"
 	},
-	"content_scripts": [ {
-		"matches": [ "https://*.twinkleding.top/*" ],
-		"js": [ "vue@3.3.7.global.js", "jquery-3.7.1.min.js", "index.js" ]
-	} ]
+	"content_scripts": [
+		{
+			"matches": ["https://*.twinkleding.top/*"],
+			"js": ["vue@3.3.7.global.js", "jquery-3.7.1.min.js", "index.js"]
+		}
+	]
 }
