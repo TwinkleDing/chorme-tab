@@ -13,6 +13,6 @@
 	},
 	"content_scripts": [ {
 		"matches": [ "https://*.twinkleding.top/*" ],
-		"js": [ "./assets/index-0c3cd7a4.js" ]
+		"js": [ "./js/index.js" ]
 	} ]
 }

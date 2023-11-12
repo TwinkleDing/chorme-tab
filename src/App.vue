@@ -5,9 +5,9 @@
       v-if="background === 'v'"
       oncontextmenu="self.event.returnValue=false"
     >
-      <video class="v" src="/img/v3.MOV" autoplay muted loop></video>
-      <video class="v" src="/img/v2.MOV" autoplay muted loop></video>
-      <video class="v" src="/img/v1.MOV" autoplay muted loop></video>
+      <video class="v" :src="'/img/v3.MOV'" autoplay muted loop></video>
+      <video class="v" :src="'/img/v2.MOV'" autoplay muted loop></video>
+      <video class="v" :src="'/img/v1.MOV'" autoplay muted loop></video>
     </div>
     <div id="box" ref="box" class="book" @mousedown="boxDown" @mouseup="boxUp">
       <div class="weather">{{ weather }}</div>
