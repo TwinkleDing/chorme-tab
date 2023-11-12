@@ -1,5 +1,14 @@
 <template>
   <div id="page" ref="page" @mousemove="pageMove">
+    <div
+      class="video"
+      v-if="background === 'v'"
+      oncontextmenu="self.event.returnValue=false"
+    >
+      <video class="v" src="/img/v3.MOV" autoplay muted loop></video>
+      <video class="v" src="/img/v2.MOV" autoplay muted loop></video>
+      <video class="v" src="/img/v1.MOV" autoplay muted loop></video>
+    </div>
     <div id="box" ref="box" class="book" @mousedown="boxDown" @mouseup="boxUp">
       <div class="weather">{{ weather }}</div>
       <div class="book-input">
@@ -15,6 +24,7 @@
         <img :src="item.icon" alt="" />
         <div class="book-title">{{ item.title }}</div>
       </div>
+      <div class="switch" @click="switchBackground"></div>
     </div>
   </div>
 </template>
@@ -25,6 +35,7 @@ const boxMove = ref(false);
 const startX = ref(0);
 const startY = ref(0);
 const weather = ref("");
+const background = ref("p");
 const bookList = ref([
   {
     title: "百度",
@@ -71,27 +82,11 @@ const enter = (e) => {
   window.open("http://www.baidu.com/s?wd=" + searchValue.value);
   searchValue.value = "";
 };
-const getWeather = () => {
-  // 查询雁塔实时天气
-  $.ajax({
-    url: "https://restapi.amap.com/v3/weather/weatherInfo",
-    type: "get",
-    data: {
-      key: "e6f02b5801b9a63514e07311a315af9f",
-      city: "610113",
-      extensions: "base", // base 实时天气,all 预报天气
-    },
-    success: (res) => {
-      console.log(res);
-      let w = res.lives[0];
-      weather.value = `今日天气：${w.city}：温度：${w.temperature}℃`;
-    },
-  });
+const switchBackground = () => {
+  background.value = background.value === "p" ? "v" : "p";
 };
 
-onMounted(() => {
-  // getWeather();
-});
+onMounted(() => {});
 </script>
 
 <style lang="scss" scoped>
@@ -102,6 +97,7 @@ onMounted(() => {
   background-image: url("/img/guo.jpg");
   background-size: 100% auto;
   color: #fff;
+  z-index: 0;
 }
 #box {
   height: 402px;
@@ -113,6 +109,7 @@ onMounted(() => {
   left: 40%;
   top: 20%;
   user-select: none;
+  z-index: 2;
 }
 
 .weather {
@@ -161,5 +158,21 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.switch {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  background-color: #ffffff88;
+  height: 40px;
+  width: 40px;
+  border-top-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+.video {
+  height: 100%;
+  width: 100%;
+  display: flex;
 }
 </style>
