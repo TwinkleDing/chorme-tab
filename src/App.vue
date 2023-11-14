@@ -50,7 +50,7 @@ const bookList = ref([
   {
     title: "DOTA2贴吧",
     href: "https://tieba.baidu.com/f?ie=utf-8&kw=dota2&fr=search",
-    icon: "/img/guo2.jpg",
+    icon: "/img/dota.png",
   },
 ]);
 const searchValue = ref("");
@@ -110,65 +110,60 @@ onMounted(() => {});
   top: 20%;
   user-select: none;
   z-index: 2;
-}
 
-.weather {
-  display: inline-block;
-  padding: 10px 20px;
-  height: 40px;
-}
-
-.book-input {
-  width: 100%;
-  height: 40px;
-  margin-bottom: 20px;
-  padding: 0 20px;
-  input {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    outline: 0;
-    font-size: 18px;
-    padding: 0 20px;
-    border-radius: 20px;
-    box-sizing: border-box;
-    // background:#ffffff66;
-    // border: 1px solid #ffffffaa;
+  .weather {
+    display: inline-block;
+    padding: 10px 20px;
+    height: 40px;
   }
-}
-
-.book-item {
-  display: inline-block;
-  width: 100px;
-  height: 140px;
-  text-align: center;
-  // border: 1px solid #eee;
-  border-radius: 10%;
-  margin-left: 20px;
-  margin-bottom: 10px;
-  img {
-    height: 80px;
-    width: 80px;
-    border-radius: 50%;
-    margin: 10px 0;
+  .book {
+    &-input {
+      width: 100%;
+      height: 40px;
+      margin-bottom: 20px;
+      padding: 0 20px;
+      input {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        outline: 0;
+        font-size: 18px;
+        padding: 0 20px;
+        border-radius: 20px;
+        box-sizing: border-box;
+      }
+    }
+    &-item {
+      display: inline-block;
+      width: 100px;
+      height: 140px;
+      text-align: center;
+      border-radius: 10%;
+      margin-left: 20px;
+      margin-bottom: 10px;
+      img {
+        height: 80px;
+        width: 80px;
+        border-radius: 50%;
+        margin: 10px 0;
+      }
+    }
+    &-title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
-}
-
-.book-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.switch {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  background-color: #ffffff88;
-  height: 40px;
-  width: 40px;
-  border-top-left-radius: 20px;
-  border-bottom-right-radius: 20px;
+  .switch {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    background-color: #ffffff88;
+    height: 40px;
+    width: 40px;
+    border-top-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
 }
 .video {
   height: 100%;
