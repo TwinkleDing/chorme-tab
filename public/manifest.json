@@ -1,18 +1,20 @@
 {
 	"manifest_version": 3,
-	"name": "twinkleding",
+	"name": "二丁果然",
 	"version": "1.0.0",
-	"description": "asas",
-	"author": "asd",
+	"description": "用爱豆的图片做成浏览器首页插件，虽然丧失后谷歌原来的功能，增加观赏性与趣味性",
+	"author": "二丁一然",
 	"icons": {
-		"16": "./img/logo.JPG",
-		"48": "./img/logo.JPG"
+		"16": "./img/favicon.png",
+		"48": "./img/favicon.png"
 	},
 	"chrome_url_overrides": {
 		"newtab": "./index.html"
 	},
-	"content_scripts": [ {
-		"matches": [ "https://*.twinkleding.top/*" ],
-		"js": [ "./js/index.js" ]
-	} ]
+	"content_scripts": [
+		{
+			"matches": ["https://*.twinkleding.top/*"],
+			"js": ["./js/index.js"]
+		}
+	]
 }

@@ -40,17 +40,17 @@ const bookList = ref([
   {
     title: "百度",
     href: "http://www.baidu.com",
-    icon: "https://www.baidu.com/img/bd_logo1.png",
+    icon: "https://www.baidu.com/favicon.ico",
   },
   {
     title: "有道翻译",
     href: "https://fanyi.youdao.com",
-    icon: "https://ydlunacommon-cdn.nosdn.127.net/1ed7a7858eabd4d407370a83d9209838.png",
+    icon: "https://shared-https.ydstatic.com/images/favicon.ico",
   },
   {
     title: "DOTA2贴吧",
     href: "https://tieba.baidu.com/f?ie=utf-8&kw=dota2&fr=search",
-    icon: "/img/dota.png",
+    icon: "https://www.dota2.com.cn/favicon.ico",
   },
 ]);
 const searchValue = ref("");
@@ -94,10 +94,11 @@ onMounted(() => {});
   height: 100%;
   width: 100%;
   position: relative;
-  background-image: url("/img/guo.jpg");
-  background-size: 100% auto;
   color: #fff;
   z-index: 0;
+  background-image: url("/img/guo.jpg");
+  background-size: cover;
+  background-repeat: no-repeat;
 }
 #box {
   height: 402px;
@@ -144,7 +145,6 @@ onMounted(() => {});
       img {
         height: 80px;
         width: 80px;
-        border-radius: 50%;
         margin: 10px 0;
       }
     }
@@ -152,17 +152,21 @@ onMounted(() => {});
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      font-size: 16px;
+      // color: transparent;
+      // -webkit-background-clip: text;
+      // background-image: linear-gradient(to right, blue, red);
     }
   }
   .switch {
     position: absolute;
     right: 0;
     bottom: 0;
-    background-color: #ffffff88;
     height: 40px;
     width: 40px;
     border-top-left-radius: 20px;
     border-bottom-right-radius: 20px;
+  background-image: url("/img/dotag.png");
   }
 }
 .video {
