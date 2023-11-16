@@ -20,11 +20,18 @@
           @keyup.enter.native="enter"
         />
       </div>
-      <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-        <img :src="item.icon" alt="" />
-        <div class="book-title">{{ item.title }}</div>
+      <div>
+        <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
+          <img :src="item.icon" alt="" />
+          <div class="book-title">{{ item.title }}</div>
+        </div>
       </div>
-      <div class="switch" @click="switchBackground"></div>
+      <div
+        :class="['switch', background === 'v' && 'switch-v']"
+        @click="switchBackground"
+      >
+        <img :src="`/img/switch.png`" alt="" />
+      </div>
     </div>
   </div>
 </template>
@@ -160,13 +167,22 @@ onMounted(() => {});
   }
   .switch {
     position: absolute;
-    right: 0;
-    bottom: 0;
+    right: -1px;
+    bottom: -1px;
     height: 40px;
     width: 40px;
-    border-top-left-radius: 20px;
-    border-bottom-right-radius: 20px;
-  background-image: url("/img/dotag.png");
+    border-radius: 20px;
+    border: 1px solid;
+    overflow: hidden;
+    transform: rotateY(0deg);
+    transition: 0.5s;
+    &-v {
+      transform: rotateY(180deg);
+    }
+    img {
+      height: 100%;
+      width: 100%;
+    }
   }
 }
 .video {
