@@ -37,6 +37,7 @@
 </template>
 <script setup>
 import { ref, onMounted } from "vue";
+import { setStorage, getStorage } from "./utils.js";
 const box = ref();
 const boxMove = ref(false);
 const startX = ref(0);
@@ -82,8 +83,8 @@ const goBook = (e) => {
   window.open(e);
 };
 const enter = (e) => {
-  if (searchValue.value.startsWith("http://") || searchValue.value.startsWith("www.")) {
-    window.open(searchValue.value);
+  if (searchValue.value.startsWith("www.")) {
+    window.open("http://" + searchValue.value);
     return;
   }
   window.open("http://www.baidu.com/s?wd=" + searchValue.value);
