@@ -56,9 +56,14 @@ const bookList = ref([
     icon: "https://shared-https.ydstatic.com/images/favicon.ico",
   },
   {
-    title: "DOTA2贴吧",
-    href: "https://tieba.baidu.com/f?ie=utf-8&kw=dota2&fr=search",
-    icon: "https://www.dota2.com.cn/favicon.ico",
+    title: "口袋妖怪贴吧",
+    href: "https://tieba.baidu.com/f?kw=口袋妖怪",
+    icon: "https://www.pokemon.cn/favicon.ico",
+  },
+  {
+    title: "神奇宝贝百科",
+    href: "https://wiki.52poke.com/wiki/主页",
+    icon: "https://wiki.52poke.com/favicon.ico",
   },
 ]);
 const searchValue = ref("");
