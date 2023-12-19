@@ -15,7 +15,7 @@
         <input
           v-model="searchValue"
           ref="input"
-          placeholder="在百度中搜索，或者输入网址"
+          placeholder="搜索..."
           type="text"
           @keyup.enter.native="enter"
         />
