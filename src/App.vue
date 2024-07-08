@@ -1,14 +1,11 @@
 <template>
-  <div id="page" ref="page" @mousemove="pageMove">
-    <div
-      class="video"
-      v-if="background === 'v'"
-      oncontextmenu="self.event.returnValue=false"
-    >
-      <video class="v" :src="'/img/v3.MOV'" autoplay muted loop></video>
-      <video class="v" :src="'/img/v2.MOV'" autoplay muted loop></video>
-      <video class="v" :src="'/img/v1.MOV'" autoplay muted loop></video>
-    </div>
+  <div
+    id="page"
+    ref="page"
+    @mousemove="pageMove"
+    @mousewheel="mousewheel"
+    :style="{ backgroundImage: `url(${pageBgImgList[pageBgImg]})` }"
+  >
     <div id="box" ref="box" class="book" @mousedown="boxDown" @mouseup="boxUp">
       <div class="weather">{{ weather }}</div>
       <div class="book-input">
@@ -26,24 +23,17 @@
           <div class="book-title">{{ item.title }}</div>
         </div>
       </div>
-      <div
-        :class="['switch', background === 'v' && 'switch-v']"
-        @click="switchBackground"
-      >
-        <img :src="`/img/switch.png`" alt="" />
-      </div>
     </div>
   </div>
 </template>
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive } from "vue";
 import { setStorage, getStorage } from "./utils.js";
 const box = ref();
 const boxMove = ref(false);
 const startX = ref(0);
 const startY = ref(0);
 const weather = ref("");
-const background = ref("p");
 const bookList = ref([
   {
     title: "百度",
@@ -67,6 +57,9 @@ const bookList = ref([
   },
 ]);
 const searchValue = ref("");
+const pageBgImg = ref(0);
+const pageBgImgList = reactive(["/img/guo0.jpg", "/img/guo1.jpg"]);
+let myTimer = null;
 
 const boxDown = (e) => {
   if (e.target.id === "box") {
@@ -87,7 +80,7 @@ const boxUp = (e) => {
 const goBook = (e) => {
   window.open(e);
 };
-const enter = (e) => {
+const enter = () => {
   if (searchValue.value.startsWith("www.")) {
     window.open("http://" + searchValue.value);
     return;
@@ -95,10 +88,31 @@ const enter = (e) => {
   window.open("http://www.baidu.com/s?wd=" + searchValue.value);
   searchValue.value = "";
 };
-const switchBackground = () => {
-  background.value = background.value === "p" ? "v" : "p";
-};
 
+const mousewheel = (e) => {
+  if (myTimer) {
+    return;
+  }
+  myTimer = setTimeout(() => {
+    let index = pageBgImg.value;
+    if (e.deltaY > 0) {
+      if (index === pageBgImgList.length - 1) {
+        index = 0;
+      } else {
+        index++;
+      }
+    } else {
+      if (index === 0) {
+        index = pageBgImgList.length - 1;
+      } else {
+        index--;
+      }
+    }
+    pageBgImg.value = index;
+    clearTimeout(myTimer);
+    myTimer = null;
+  }, 1000);
+};
 onMounted(() => {});
 </script>
 
@@ -109,7 +123,6 @@ onMounted(() => {});
   position: relative;
   color: #fff;
   z-index: 0;
-  background-image: url("/img/guo.jpg");
   background-size: cover;
   background-repeat: no-repeat;
 }
@@ -166,34 +179,7 @@ onMounted(() => {});
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: 16px;
-      // color: transparent;
-      // -webkit-background-clip: text;
-      // background-image: linear-gradient(to right, blue, red);
     }
   }
-  .switch {
-    position: absolute;
-    right: -1px;
-    bottom: -1px;
-    height: 40px;
-    width: 40px;
-    border-radius: 20px;
-    border: 1px solid;
-    overflow: hidden;
-    transform: rotateY(0deg);
-    transition: 0.5s;
-    &-v {
-      transform: rotateY(180deg);
-    }
-    img {
-      height: 100%;
-      width: 100%;
-    }
-  }
-}
-.video {
-  height: 100%;
-  width: 100%;
-  display: flex;
 }
 </style>
