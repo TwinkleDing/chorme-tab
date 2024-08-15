@@ -4,7 +4,10 @@
     ref="page"
     @mousemove="pageMove"
     @mousewheel="mousewheel"
-    :style="{ backgroundImage: `url(${pageBgImgList[pageBgImg]})` }"
+    :style="{
+      backgroundImage: `url(${pageBgImgList[pageBgImg]})`,
+      backgroundSize: bgSizeList[bgSize],
+    }"
   >
     <div id="box" ref="box" class="book" @mousedown="boxDown" @mouseup="boxUp">
       <div class="weather">{{ weather }}</div>
@@ -17,11 +20,9 @@
           @keyup.enter.native="enter"
         />
       </div>
-      <div>
-        <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-          <img :src="item.icon" alt="" />
-          <div class="book-title">{{ item.title }}</div>
-        </div>
+      <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
+        <img :src="item.icon" alt="" />
+        <div class="book-title">{{ item.title }}</div>
       </div>
     </div>
   </div>
@@ -59,6 +60,9 @@ const pageBgImgList = reactive([
   "/img/guo8.jpg",
 ]);
 let myTimer = null;
+const controlDown = ref(false);
+const bgSizeList = reactive(["cover", "contain", "100% 100%"]);
+const bgSize = ref(0);
 
 const boxDown = (e) => {
   if (e.target.id === "box") {
@@ -71,6 +75,8 @@ const pageMove = (e) => {
   if (boxMove.value) {
     box.value.style.left = e.clientX - startX.value + "px";
     box.value.style.top = e.clientY - startY.value + "px";
+    setStorage("searchX", box.value.style.left);
+    setStorage("searchY", box.value.style.top);
   }
 };
 const boxUp = (e) => {
@@ -88,8 +94,8 @@ const enter = () => {
   searchValue.value = "";
 };
 
-const mousewheel = (e) => {
-  if (myTimer) {
+const mousewheel = async (e) => {
+  if (myTimer || controlDown.value) {
     return;
   }
   myTimer = setTimeout(() => {
@@ -107,12 +113,69 @@ const mousewheel = (e) => {
         index--;
       }
     }
+    setStorage("bgIndex", index);
     pageBgImg.value = index;
     clearTimeout(myTimer);
     myTimer = null;
   }, 1000);
 };
-onMounted(() => {});
+
+const bgChange = (e) => {
+  if (e.key === "ArrowUp") {
+    mousewheel({ deltaY: -1 });
+  }
+  if (e.key === "ArrowDown") {
+    mousewheel({ deltaY: 1 });
+  }
+};
+const bgSizeChange = (e) => {
+  if (e.key === "ArrowLeft") {
+    let index = bgSize.value;
+    index--;
+    if (index < 0) {
+      index = bgSizeList.length - 1;
+    }
+    bgSize.value = index;
+    setStorage("bgSize", index);
+  }
+  if (e.key === "ArrowRight") {
+    let index = bgSize.value;
+    index++;
+    if (index > bgSizeList.length - 1) {
+      index = 0;
+    }
+    bgSize.value = index;
+    setStorage("bgSize", index);
+  }
+};
+const keyDown = (e) => {
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Control") {
+      controlDown.value = true;
+    }
+    bgSizeChange(e);
+    bgChange(e);
+  });
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "Control") {
+      controlDown.value = false;
+    }
+  });
+};
+
+onMounted(() => {
+  let bgIndex = getStorage("bgIndex");
+  if (bgIndex !== null) {
+    pageBgImg.value = bgIndex;
+  }
+  let searchX = getStorage("searchX");
+  if (searchX !== null) {
+    box.value.style.left = searchX;
+    box.value.style.top = getStorage("searchY");
+  }
+  bgSize.value = getStorage("bgSize") || bgSize.value;
+  keyDown();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -122,7 +185,6 @@ onMounted(() => {});
   position: relative;
   color: #fff;
   z-index: 0;
-  background-size: cover;
   background-repeat: no-repeat;
 }
 #box {
@@ -161,12 +223,9 @@ onMounted(() => {});
     }
     &-item {
       display: inline-block;
-      width: 100px;
-      height: 140px;
       text-align: center;
       border-radius: 10%;
-      margin-left: 20px;
-      margin-bottom: 10px;
+      margin: 0 20px 15px;
       img {
         height: 80px;
         width: 80px;
