@@ -58,7 +58,16 @@ const bookList = ref([
 ]);
 const searchValue = ref("");
 const pageBgImg = ref(0);
-const pageBgImgList = reactive(["/img/guo0.jpg", "/img/guo1.jpg"]);
+const pageBgImgList = reactive([
+  "/img/guo1.jpg",
+  "/img/guo2.jpg",
+  "/img/guo3.jpg",
+  "/img/guo4.jpg",
+  "/img/guo5.jpg",
+  "/img/guo6.jpg",
+  "/img/guo7.jpg",
+  "/img/guo8.jpg",
+]);
 let myTimer = null;
 
 const boxDown = (e) => {
