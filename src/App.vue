@@ -61,7 +61,7 @@ const pageBgImgList = reactive([
 ]);
 let myTimer = null;
 const controlDown = ref(false);
-const bgSizeList = reactive(["cover", "contain", "100% 100%"]);
+const bgSizeList = reactive(["cover", "contain", "100% 100%", "100% auto", "auto 100%"]);
 const bgSize = ref(0);
 
 const boxDown = (e) => {
@@ -93,7 +93,6 @@ const enter = () => {
   window.open("http://www.baidu.com/s?wd=" + searchValue.value);
   searchValue.value = "";
 };
-
 const mousewheel = async (e) => {
   if (myTimer || controlDown.value) {
     return;
@@ -101,13 +100,13 @@ const mousewheel = async (e) => {
   myTimer = setTimeout(() => {
     let index = pageBgImg.value;
     if (e.deltaY > 0) {
-      if (index === pageBgImgList.length - 1) {
+      if (index >= pageBgImgList.length - 1) {
         index = 0;
       } else {
         index++;
       }
     } else {
-      if (index === 0) {
+      if (index <= 0) {
         index = pageBgImgList.length - 1;
       } else {
         index--;
@@ -120,7 +119,7 @@ const mousewheel = async (e) => {
   }, 1000);
 };
 
-const bgChange = (e) => {
+const bgSrcChange = (e) => {
   if (e.key === "ArrowUp") {
     mousewheel({ deltaY: -1 });
   }
@@ -148,22 +147,7 @@ const bgSizeChange = (e) => {
     setStorage("bgSize", index);
   }
 };
-const keyDown = (e) => {
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Control") {
-      controlDown.value = true;
-    }
-    bgSizeChange(e);
-    bgChange(e);
-  });
-  document.addEventListener("keyup", (e) => {
-    if (e.key === "Control") {
-      controlDown.value = false;
-    }
-  });
-};
-
-onMounted(() => {
+const init = () => {
   let bgIndex = getStorage("bgIndex");
   if (bgIndex !== null) {
     pageBgImg.value = bgIndex;
@@ -174,6 +158,24 @@ onMounted(() => {
     box.value.style.top = getStorage("searchY");
   }
   bgSize.value = getStorage("bgSize") || bgSize.value;
+};
+const keyDown = (e) => {
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Control") {
+      controlDown.value = true;
+    }
+    bgSizeChange(e);
+    bgSrcChange(e);
+  });
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "Control") {
+      controlDown.value = false;
+    }
+  });
+};
+
+onMounted(() => {
+  init();
   keyDown();
 });
 </script>
