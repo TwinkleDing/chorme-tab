@@ -58,6 +58,9 @@ const pageBgImgList = reactive([
   "/img/guo6.jpg",
   "/img/guo7.jpg",
   "/img/guo8.jpg",
+  "/img/guo1.jpg",
+  "/img/guo10.jpg",
+  "/img/guo11.jpg",
 ]);
 let myTimer = null;
 const controlDown = ref(false);
