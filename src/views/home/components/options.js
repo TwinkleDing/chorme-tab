@@ -25,14 +25,14 @@ export const BookList = [
 		href: "https://fanyi.youdao.com/#/TextTranslate",
 		icon: "https://shared-https.ydstatic.com/images/favicon.ico",
 	},
-	{
-		title: "我的小说",
-		href: "/story",
-		icon: "",
-	},
-	{
-		title: "你画我猜",
-		href: "/draw",
-		icon: "",
-	},
+	// {
+	// 	title: "我的小说",
+	// 	href: "/story",
+	// 	icon: "",
+	// },
+	// {
+	// 	title: "你画我猜",
+	// 	href: "/draw",
+	// 	icon: "",
+	// },
 ];
