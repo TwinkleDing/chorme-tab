@@ -9,9 +9,11 @@
       backgroundSize: bgSizeList[bgSize],
     }"
   >
-    <div id="box" ref="box" class="book" @mousedown="boxDown" @mouseup="boxUp">
-      <div class="weather">{{ weather }}</div>
-      <div class="book-input">
+    <div id="box" ref="box" @mousedown="boxDown" @mouseup="boxUp">
+      <div class="tips">
+        <span>{{ dateTime }}</span>
+      </div>
+      <div class="search-input">
         <input
           v-model="searchValue"
           ref="input"
@@ -20,18 +22,28 @@
           @keyup.enter.native="enter"
         />
       </div>
-      <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-        <img :src="item.icon" alt="" />
-        <div class="book-title">{{ item.title }}</div>
+      <div v-if="ex" class="book">
+        <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
+          <img :src="item.icon" alt="" />
+          <div class="book-title">{{ item.title }}</div>
+        </div>
+      </div>
+      <div class="ex" @click="setEx">
+        <el-icon>
+          <TopLeft v-if="ex" />
+          <BottomRight v-else />
+        </el-icon>
       </div>
     </div>
   </div>
 </template>
 <script setup>
 import { ref, onMounted, reactive } from "vue";
+import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { setStorage, getStorage } from "@/utils.js";
 import { PageBgImgList, BookList } from "./components/options.js";
+import { dateFormat } from "@/utils.js";
 
 const router = useRouter();
 const box = ref();
@@ -43,11 +55,14 @@ const bookList = ref(BookList);
 const searchValue = ref("");
 const pageBgImg = ref(0);
 const pageBgImgList = reactive(PageBgImgList);
-let myTimer = null;
+let mouseTimer = null;
 const controlDown = ref(false);
-const bgSizeList = reactive(["100% 100%", "cover", "contain"]);
+const bgSizeList = ["100% 100%", "cover", "contain"];
 const bgSize = ref(0);
+const dateTime = ref(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
+const ex = ref(1);
 
+// 鼠标按下
 const boxDown = (e) => {
   if (e.target.id === "box") {
     startX.value = e.offsetX;
@@ -55,6 +70,7 @@ const boxDown = (e) => {
     boxMove.value = true;
   }
 };
+// 鼠标移动
 const pageMove = (e) => {
   if (boxMove.value) {
     box.value.style.left = e.clientX - startX.value + "px";
@@ -63,6 +79,7 @@ const pageMove = (e) => {
     setStorage("searchY", box.value.style.top);
   }
 };
+// 鼠标松开
 const boxUp = (e) => {
   boxMove.value = false;
 };
@@ -84,10 +101,10 @@ const enter = () => {
 };
 // 鼠标滚轮切换背景图片
 const mousewheel = async (e) => {
-  if (myTimer || controlDown.value) {
+  if (mouseTimer || controlDown.value) {
     return;
   }
-  myTimer = setTimeout(() => {
+  mouseTimer = setTimeout(() => {
     let index = pageBgImg.value;
     if (e.deltaY > 0) {
       if (index >= pageBgImgList.length - 1) {
@@ -104,11 +121,10 @@ const mousewheel = async (e) => {
     }
     setStorage("bgIndex", index);
     pageBgImg.value = index;
-    clearTimeout(myTimer);
-    myTimer = null;
+    clearTimeout(mouseTimer);
+    mouseTimer = null;
   }, 1000);
 };
-
 // 按下上下键盘切换背景图
 const bgSrcChange = (e) => {
   if (e.key === "ArrowUp") {
@@ -118,6 +134,7 @@ const bgSrcChange = (e) => {
     mousewheel({ deltaY: 1 });
   }
 };
+// 按左右键切换背景图的size
 const bgSizeChange = (e) => {
   if (e.key === "ArrowLeft") {
     let index = bgSize.value;
@@ -154,7 +171,7 @@ const keyDown = (e) => {
   });
 };
 // 初始化背景图片,搜索框位置
-const init = () => {
+const initBox = () => {
   let bgIndex = getStorage("bgIndex");
   if (bgIndex !== null) {
     pageBgImg.value = bgIndex;
@@ -165,10 +182,28 @@ const init = () => {
     box.value.style.top = getStorage("searchY");
   }
   bgSize.value = getStorage("bgSize") || bgSize.value;
+  ex.value = parseInt(getStorage("ex"));
 };
+// 获取当前时间
+const getTime = () => {
+  setInterval(() => {
+    dateTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
+  }, 1000);
+};
+// 是否收缩
+const setEx = () => {
+  if (ex.value == 1) {
+    ex.value = 0;
+  } else {
+    ex.value = 1;
+  }
+  setStorage("ex", ex.value);
+};
+
 onMounted(() => {
-  init();
+  initBox();
   keyDown();
+  getTime();
 });
 </script>
 
@@ -182,9 +217,8 @@ onMounted(() => {
   background-repeat: no-repeat;
 }
 #box {
-  height: 402px;
   width: 622px;
-  border: 1px solid #eee;
+  border: 1px solid #aaa;
   cursor: pointer;
   border-radius: 20px;
   position: absolute;
@@ -192,29 +226,31 @@ onMounted(() => {
   top: 20%;
   user-select: none;
   z-index: 2;
+  padding: 0 20px 20px;
 
-  .weather {
+  .tips {
     display: inline-block;
-    padding: 10px 20px;
     height: 40px;
+    line-height: 40px;
+  }
+  .search-input {
+    width: 100%;
+    height: 40px;
+    margin-bottom: 20px;
+    input {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      outline: 0;
+      font-size: 18px;
+      padding: 0 20px;
+      border-radius: 20px;
+      box-sizing: border-box;
+    }
   }
   .book {
-    &-input {
-      width: 100%;
-      height: 40px;
-      margin-bottom: 20px;
-      padding: 0 20px;
-      input {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        outline: 0;
-        font-size: 18px;
-        padding: 0 20px;
-        border-radius: 20px;
-        box-sizing: border-box;
-      }
-    }
+    display: inline-block;
+    height: 280px;
     &-item {
       display: inline-block;
       text-align: center;
@@ -232,6 +268,15 @@ onMounted(() => {
       text-overflow: ellipsis;
       font-size: 16px;
     }
+  }
+  .ex {
+    position: absolute;
+    bottom: 0;
+    right: 5px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #aaa;
+    cursor: pointer;
   }
 }
 </style>
