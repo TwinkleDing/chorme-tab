@@ -31,8 +31,10 @@ const { getBgIndex, setBgIndex } = imgStore;
 
 const ex = ref(true);
 const bgIndex = ref(getBgIndex);
+const imgHasClick = ref(false);
 
 const setBg = (index) => {
+  imgHasClick.value = true;
   setBgIndex(index);
   bgIndex.value = index;
 };
@@ -45,22 +47,41 @@ const mousewheel = (e) => {
     content.scrollLeft -= content.clientWidth * 0.1;
   }
 };
-const setCurrentCenter = () => {
+const setCurrentCenter = (oldValue) => {
   let timer;
   const content = document.getElementsByClassName("el-scrollbar__wrap")[0];
-  let count = 0;
-  let scrollLeft = 0;
+  const imgWidth = 142;
   setTimeout(() => {
-    const halfIndex = parseInt(content.clientWidth / 2 / 142);
-    timer = setInterval(() => {
-      if (count < halfIndex) {
-        content.scrollLeft = 0;
+    const halfIndex = parseInt(content.clientWidth / 2 / imgWidth);
+    let scrollLeft = content.scrollLeft;
+    let scrollIndex = 0;
+    // 新的值和旧的值都小于一般，不进行滚动
+    if (bgIndex.value <= halfIndex && oldValue <= halfIndex) {
+      content.scrollLeft = 0;
+    } else {
+      // 打开列表，如果有过滚动，不让再滚动
+      if (oldValue == -1 && content.scrollLeft > 0) {
+        scrollIndex = 0;
+      } else if (oldValue <= halfIndex) {
+        // 旧的值小于一半，新的值大于一半，从一半开始计算滚动次数
+        scrollIndex = bgIndex.value - halfIndex;
       } else {
-        scrollLeft++;
-        content.scrollLeft = scrollLeft * 142;
+        // 旧的值和新的值都大于一半，直接计算差值滚动次数
+        scrollIndex = bgIndex.value - oldValue;
       }
-      count++;
-      if (count >= bgIndex.value) {
+    }
+    timer = setInterval(() => {
+      // 向后滚动
+      if (scrollIndex > 0) {
+        content.scrollLeft += imgWidth;
+        scrollIndex--;
+      }
+      // 向前滚动;
+      if (scrollIndex < 0) {
+        content.scrollLeft -= imgWidth;
+        scrollIndex++;
+      }
+      if (scrollIndex == 0) {
         clearInterval(timer);
       }
     }, 10);
@@ -68,14 +89,18 @@ const setCurrentCenter = () => {
 };
 watch(
   () => imgStore.bgIndex,
-  (e) => {
-    setCurrentCenter();
+  (newValue, oldValue) => {
+    if (!imgHasClick.value) {
+      setCurrentCenter(oldValue);
+    }
+    bgIndex.value = newValue;
+    imgHasClick.value = false;
   }
 );
 watch(
   () => ex.value,
   (e) => {
-    !e && setCurrentCenter();
+    !e && setCurrentCenter(-1);
   }
 );
 
