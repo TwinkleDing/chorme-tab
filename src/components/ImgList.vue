@@ -34,6 +34,7 @@ const bgIndex = ref(getBgIndex);
 
 const setBg = (index) => {
   setBgIndex(index);
+  bgIndex.value = index;
 };
 const mousewheel = (e) => {
   e.preventDefault();
@@ -44,15 +45,37 @@ const mousewheel = (e) => {
     content.scrollLeft -= content.clientWidth * 0.1;
   }
 };
+const setCurrentCenter = () => {
+  let timer;
+  const content = document.getElementsByClassName("el-scrollbar__wrap")[0];
+  let count = 0;
+  let scrollLeft = 0;
+  setTimeout(() => {
+    const halfIndex = parseInt(content.clientWidth / 2 / 142);
+    timer = setInterval(() => {
+      if (count < halfIndex) {
+        content.scrollLeft = 0;
+      } else {
+        scrollLeft++;
+        content.scrollLeft = scrollLeft * 142;
+      }
+      count++;
+      if (count >= bgIndex.value) {
+        clearInterval(timer);
+      }
+    }, 10);
+  }, 10);
+};
 watch(
   () => imgStore.bgIndex,
   (e) => {
-    setBgIndex(e);
-    bgIndex.value = e;
-  },
-  {
-    immediate: true,
-    deep: true,
+    setCurrentCenter();
+  }
+);
+watch(
+  () => ex.value,
+  (e) => {
+    !e && setCurrentCenter();
   }
 );
 
@@ -99,7 +122,8 @@ onMounted(() => {});
           background: #fff;
         }
         img {
-          height: 100%;
+          height: 92px;
+          width: 138px;
         }
       }
     }

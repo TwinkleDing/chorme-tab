@@ -264,6 +264,7 @@ onMounted(() => {
       padding: 0 20px;
       border-radius: 20px;
       box-sizing: border-box;
+      background: #ffffffaa;
     }
   }
   .book {
