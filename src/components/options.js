@@ -13,6 +13,21 @@ export const PageBgImgList = [
 	"/bg/guo12.jpg",
 	"/bg/guo13.jpg",
 ];
+export const PageThImgList = [
+	"/bg/th/guo1.jpg",
+	"/bg/th/guo2.jpg",
+	"/bg/th/guo3.jpg",
+	"/bg/th/guo4.jpg",
+	"/bg/th/guo5.jpg",
+	"/bg/th/guo6.jpg",
+	"/bg/th/guo7.jpg",
+	"/bg/th/guo8.jpg",
+	"/bg/th/guo9.jpg",
+	"/bg/th/guo10.jpg",
+	"/bg/th/guo11.jpg",
+	"/bg/th/guo12.jpg",
+	"/bg/th/guo13.jpg",
+];
 
 export const BookList = [
 	{

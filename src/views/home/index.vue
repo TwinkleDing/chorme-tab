@@ -3,12 +3,12 @@
     id="page"
     ref="page"
     @mousemove="pageMove"
-    @mousewheel="mousewheel"
     :style="{
       backgroundImage: `url(${pageBgImgList[pageBgImg]})`,
       backgroundSize: bgSizeList[bgSize],
     }"
   >
+    <!-- @mousewheel="mousewheel" -->
     <div id="box" ref="box" @mousedown="boxDown" @mouseup="boxUp">
       <div class="tips">
         <span>{{ dateTime }}</span>
@@ -22,7 +22,7 @@
           @keyup.enter.native="enter"
         />
       </div>
-      <div v-if="ex" class="book">
+      <div v-show="ex" id="book" class="book">
         <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
           <img :src="item.icon" alt="" />
           <div class="book-title">{{ item.title }}</div>
@@ -35,17 +35,22 @@
         </el-icon>
       </div>
     </div>
+    <img-list />
   </div>
 </template>
 <script setup>
-import { ref, onMounted, reactive } from "vue";
-import { TopLeft, BottomRight } from "@element-plus/icons-vue";
+import { ref, watch, onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { setStorage, getStorage } from "@/utils.js";
-import { PageBgImgList, BookList } from "./components/options.js";
+import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import { dateFormat } from "@/utils.js";
+import ImgList from "@/components/ImgList.vue";
+import { setStorage, getStorage } from "@/utils.js";
+import { PageBgImgList, BookList } from "@/components/options.js";
+import useImgStore from "@/store/img.js";
 
 const router = useRouter();
+const imgStore = useImgStore();
+const { bgIndex, getBgIndex, setBgIndex } = imgStore;
 const box = ref();
 const boxMove = ref(false);
 const startX = ref(0);
@@ -67,6 +72,11 @@ const boxDown = (e) => {
   if (e.target.id === "box") {
     startX.value = e.offsetX;
     startY.value = e.offsetY;
+    boxMove.value = true;
+  }
+  if (e.target.id === "book") {
+    startX.value = e.offsetX + 21;
+    startY.value = e.offsetY + 101;
     boxMove.value = true;
   }
 };
@@ -119,7 +129,7 @@ const mousewheel = async (e) => {
         index--;
       }
     }
-    setStorage("bgIndex", index);
+    setBgIndex(index);
     pageBgImg.value = index;
     clearTimeout(mouseTimer);
     mouseTimer = null;
@@ -172,9 +182,8 @@ const keyDown = (e) => {
 };
 // 初始化背景图片,搜索框位置
 const initBox = () => {
-  let bgIndex = getStorage("bgIndex");
-  if (bgIndex !== null) {
-    pageBgImg.value = bgIndex;
+  if (getBgIndex !== null) {
+    pageBgImg.value = getBgIndex;
   }
   let searchX = getStorage("searchX");
   if (searchX !== null) {
@@ -199,7 +208,16 @@ const setEx = () => {
   }
   setStorage("ex", ex.value);
 };
-
+watch(
+  () => imgStore.bgIndex,
+  (e) => {
+    pageBgImg.value = e;
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
 onMounted(() => {
   initBox();
   keyDown();
