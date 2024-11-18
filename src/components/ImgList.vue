@@ -5,19 +5,22 @@
         :class="['size-box', 'size-box-0', sizeIndex == 0 && 'size-active']"
         @click="setBgSize(0)"
       >
-        <div></div>
+        <div class="screen"></div>
+        <div class="bg"></div>
       </div>
       <div
         :class="['size-box', 'size-box-1', sizeIndex == 1 && 'size-active']"
         @click="setBgSize(1)"
       >
-        <div></div>
+        <div class="screen"></div>
+        <div class="bg"></div>
       </div>
       <div
         :class="['size-box', 'size-box-2', sizeIndex == 2 && 'size-active']"
         @click="setBgSize(2)"
       >
-        <div></div>
+        <div class="screen"></div>
+        <div class="bg"></div>
       </div>
     </div>
     <div class="img-box">
@@ -45,9 +48,8 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { DArrowRight, DArrowLeft } from "@element-plus/icons-vue";
-
-import { PageThImgList, BgSizeList } from "@/components/options.js";
 import useImgStore from "@/store/img.js";
+import { PageThImgList, BgSizeList } from "@/components/Options.js";
 
 const imgStore = useImgStore();
 
@@ -193,38 +195,54 @@ onMounted(() => {});
     color: #cccccc88;
     cursor: pointer;
     .size-box {
-      width: 32px;
-      height: 18px;
-      border: 1px solid #cccccc;
-      cursor: pointer;
       display: inline-block;
-      margin: 2px 4px 0;
-      padding: 1px;
+      position: relative;
+      width: 34px;
+      height: 20px;
+      margin: 2px 8px 0;
+      .screen {
+        width: 34px;
+        height: 20px;
+        border: 1px solid #cccccc;
+        cursor: pointer;
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 10;
+      }
+      .bg {
+        position: absolute;
+        left: 2px;
+        top: 2px;
+      }
       &-0 {
-        div {
+        .bg {
           border: 1px solid #cccccc88;
-          width: 28px;
-          height: 14px;
+          width: 29px;
+          height: 15px;
         }
       }
       &-1 {
-        div {
+        .bg {
           border: 1px solid #cccccc88;
-          width: 34px;
+          width: 36px;
           height: 22px;
         }
       }
       &-2 {
-        div {
+        .bg {
           border: 1px solid #cccccc88;
           width: 24px;
-          height: 14px;
+          height: 15px;
         }
       }
     }
     .size-active {
-      div {
-        background: #cccccc88;
+      .screen {
+        background: #ffffff88;
+      }
+      .bg {
+        background: #aaa;
         z-index: 0;
       }
     }

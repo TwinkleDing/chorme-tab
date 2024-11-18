@@ -39,14 +39,14 @@
   </div>
 </template>
 <script setup>
-import { ref, watch, onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
+import { ref, watch, onMounted, reactive } from "vue";
 import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import { dateFormat } from "@/utils.js";
+import useImgStore from "@/store/img.js";
 import ImgList from "@/components/ImgList.vue";
 import { setStorage, getStorage } from "@/utils.js";
-import { PageBgImgList, BgSizeList, BookList } from "@/components/options.js";
-import useImgStore from "@/store/img.js";
+import { PageBgImgList, BgSizeList, BookList } from "@/components/Options.js";
 
 const router = useRouter();
 const imgStore = useImgStore();
