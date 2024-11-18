@@ -14,19 +14,19 @@ export const PageBgImgList = [
 	"/bg/guo13.jpg",
 ];
 export const PageThImgList = [
-	"/bg/th/guo1.jpg",
-	"/bg/th/guo2.jpg",
-	"/bg/th/guo3.jpg",
-	"/bg/th/guo4.jpg",
-	"/bg/th/guo5.jpg",
-	"/bg/th/guo6.jpg",
-	"/bg/th/guo7.jpg",
-	"/bg/th/guo8.jpg",
-	"/bg/th/guo9.jpg",
-	"/bg/th/guo10.jpg",
-	"/bg/th/guo11.jpg",
-	"/bg/th/guo12.jpg",
-	"/bg/th/guo13.jpg",
+	"/bg/guo1-t.jpg",
+	"/bg/guo2-t.jpg",
+	"/bg/guo3-t.jpg",
+	"/bg/guo4-t.jpg",
+	"/bg/guo5-t.jpg",
+	"/bg/guo6-t.jpg",
+	"/bg/guo7-t.jpg",
+	"/bg/guo8-t.jpg",
+	"/bg/guo9-t.jpg",
+	"/bg/guo10-t.jpg",
+	"/bg/guo11-t.jpg",
+	"/bg/guo12-t.jpg",
+	"/bg/guo13-t.jpg",
 ];
 
 export const BgSizeList = ["100% 100%", "cover", "contain"];

@@ -1,13 +1,22 @@
 <template>
   <div class="bg-box">
     <div class="bg-size" v-show="!ex">
-      <div class="size-box size-box-1" @click="setBgSize(0)">
+      <div
+        :class="['size-box', 'size-box-0', sizeIndex == 0 && 'size-active']"
+        @click="setBgSize(0)"
+      >
         <div></div>
       </div>
-      <div class="size-box size-box-2" @click="setBgSize(1)">
+      <div
+        :class="['size-box', 'size-box-1', sizeIndex == 1 && 'size-active']"
+        @click="setBgSize(1)"
+      >
         <div></div>
       </div>
-      <div class="size-box size-box-3" @click="setBgSize(2)">
+      <div
+        :class="['size-box', 'size-box-2', sizeIndex == 2 && 'size-active']"
+        @click="setBgSize(2)"
+      >
         <div></div>
       </div>
     </div>
@@ -59,7 +68,7 @@ const setBgIndex = (index) => {
  * 设置背景样式
  */
 const setBgSize = (e) => {
-  imgStore.setSizeIndex(e)
+  imgStore.setSizeIndex(e);
 };
 
 /**
@@ -191,26 +200,32 @@ onMounted(() => {});
       display: inline-block;
       margin: 2px 4px 0;
       padding: 1px;
-      &-1 {
+      &-0 {
         div {
           border: 1px solid #cccccc88;
           width: 28px;
           height: 14px;
         }
       }
-      &-2 {
+      &-1 {
         div {
           border: 1px solid #cccccc88;
           width: 34px;
           height: 22px;
         }
       }
-      &-3 {
+      &-2 {
         div {
           border: 1px solid #cccccc88;
           width: 24px;
           height: 14px;
         }
+      }
+    }
+    .size-active {
+      div {
+        background: #cccccc88;
+        z-index: 0;
       }
     }
   }

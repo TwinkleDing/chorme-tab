@@ -2,7 +2,7 @@
  * @Author: twinkleding twinkle415@163.com
  * @Date: 2023-11-13 09:04:53
  * @LastEditors: twinkleding
- * @LastEditTime: 2024-11-12 11:11:04
+ * @LastEditTime: 2024-11-18 14:08:56
  * @FilePath: \chorme-tab\vite.config.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -28,7 +28,7 @@ export default defineConfig({
 		alias: {
 			"@": path.resolve(__dirname, "src"),
 		},
-		extensions: [".js", ".ts", ".tsx", ".json"],
+		extensions: [".js", ".ts", ".tsx", ".json", "jpg"],
 	},
 	build: {
 		rollupOptions: {
