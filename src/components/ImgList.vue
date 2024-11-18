@@ -29,28 +29,39 @@ import useImgStore from "@/store/img.js";
 const imgStore = useImgStore();
 const { getBgIndex, setBgIndex } = imgStore;
 
+const imgWidth = 142;
 const ex = ref(true);
 const bgIndex = ref(getBgIndex);
-const imgHasClick = ref(false);
 
+/**
+ * 设置当前背景
+ */
 const setBg = (index) => {
-  imgHasClick.value = true;
   setBgIndex(index);
   bgIndex.value = index;
 };
+
+/**
+ * 鼠标滚动，设置滚动条位置
+ */
 const mousewheel = (e) => {
   e.preventDefault();
   const content = document.getElementsByClassName("el-scrollbar__wrap")[0];
   if (e.deltaY > 0) {
-    content.scrollLeft += content.clientWidth * 0.1;
+    content.scrollLeft += imgWidth;
   } else {
-    content.scrollLeft -= content.clientWidth * 0.1;
+    content.scrollLeft -= imgWidth;
   }
 };
-const setCurrentCenter = (oldValue) => {
+
+/**
+ * 设置滚动条背景动画，使当前选中的居中
+ * @params
+ * oldValue 上一次滚动的下标，第一次打开默认为-1
+ */
+const setCurrentCenter = (oldValue = -1) => {
   let timer;
   const content = document.getElementsByClassName("el-scrollbar__wrap")[0];
-  const imgWidth = 142;
   setTimeout(() => {
     const halfIndex = parseInt(content.clientWidth / 2 / imgWidth);
     let scrollLeft = content.scrollLeft;
@@ -59,48 +70,64 @@ const setCurrentCenter = (oldValue) => {
     if (bgIndex.value <= halfIndex && oldValue <= halfIndex) {
       content.scrollLeft = 0;
     } else {
-      // 打开列表，如果有过滚动，不让再滚动
+      // 打开列表，如果有过滚动，不让自动滚动，手动设置到固定位置
       if (oldValue == -1 && content.scrollLeft > 0) {
         scrollIndex = 0;
+        if (content.scrollLeft != (bgIndex.value - halfIndex) * imgWidth) {
+          content.scrollLeft = (bgIndex.value - halfIndex) * imgWidth;
+        }
       } else if (oldValue <= halfIndex) {
         // 旧的值小于一半，新的值大于一半，从一半开始计算滚动次数
         scrollIndex = bgIndex.value - halfIndex;
       } else {
         // 旧的值和新的值都大于一半，直接计算差值滚动次数
         scrollIndex = bgIndex.value - oldValue;
+        // 当前如果是最后在一半之后的几个向前滚动，不计算滚动
+        if (scrollIndex < 0 && bgIndex.value >= PageThImgList.length - halfIndex) {
+          scrollIndex = 0;
+        }
       }
     }
+    // 动画移动倍数
+    let multiple = 2;
+    // 如果是第一到倒一或者倒一到第一或者打一次打开动画速度提高
+    if (
+      (oldValue == 0 && bgIndex.value == PageThImgList.length - 1) ||
+      (oldValue == PageThImgList.length - 1 && bgIndex.value == 0) ||
+      oldValue == -1
+    ) {
+      multiple = 10;
+    }
+    scrollIndex *= imgWidth / multiple;
     timer = setInterval(() => {
       // 向后滚动
       if (scrollIndex > 0) {
-        content.scrollLeft += imgWidth;
+        content.scrollLeft += multiple;
         scrollIndex--;
       }
       // 向前滚动;
       if (scrollIndex < 0) {
-        content.scrollLeft -= imgWidth;
+        content.scrollLeft -= multiple;
         scrollIndex++;
       }
-      if (scrollIndex == 0) {
+      // 滚动条不用滚动了或者前移后移单位在±1的话清除定时器
+      if (content.scrollLeft == 0 || (scrollIndex > -1 && scrollIndex < 1)) {
         clearInterval(timer);
       }
-    }, 10);
+    }, 1);
   }, 10);
 };
 watch(
   () => imgStore.bgIndex,
   (newValue, oldValue) => {
-    if (!imgHasClick.value) {
-      setCurrentCenter(oldValue);
-    }
+    setCurrentCenter(oldValue);
     bgIndex.value = newValue;
-    imgHasClick.value = false;
   }
 );
 watch(
   () => ex.value,
   (e) => {
-    !e && setCurrentCenter(-1);
+    !e && setCurrentCenter();
   }
 );
 

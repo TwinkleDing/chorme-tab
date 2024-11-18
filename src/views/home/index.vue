@@ -3,12 +3,12 @@
     id="page"
     ref="page"
     @mousemove="pageMove"
+    @mousewheel="mousewheel"
     :style="{
       backgroundImage: `url(${pageBgImgList[pageBgImg]})`,
       backgroundSize: bgSizeList[bgSize],
     }"
   >
-    <!-- @mousewheel="mousewheel" -->
     <div id="box" ref="box" @mousedown="boxDown" @mouseup="boxUp">
       <div class="tips">
         <span>{{ dateTime }}</span>
@@ -264,7 +264,7 @@ onMounted(() => {
       padding: 0 20px;
       border-radius: 20px;
       box-sizing: border-box;
-    background: #ffffffaa;
+      background: #ffffffaa;
     }
   }
   .book {
