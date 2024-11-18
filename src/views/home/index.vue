@@ -1,12 +1,12 @@
 <template>
+  <!-- @mousewheel="mousewheel" -->
   <div
     id="page"
     ref="page"
     @mousemove="pageMove"
-    @mousewheel="mousewheel"
     :style="{
-      backgroundImage: `url(${pageBgImgList[pageBgImg]})`,
-      backgroundSize: bgSizeList[bgSize],
+      backgroundImage: `url(${pageBgImgList[bgIndex]})`,
+      backgroundSize: bgSizeList[sizeIndex],
     }"
   >
     <div id="box" ref="box" @mousedown="boxDown" @mouseup="boxUp">
@@ -45,27 +45,27 @@ import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import { dateFormat } from "@/utils.js";
 import ImgList from "@/components/ImgList.vue";
 import { setStorage, getStorage } from "@/utils.js";
-import { PageBgImgList, BookList } from "@/components/options.js";
+import { PageBgImgList, BgSizeList, BookList } from "@/components/options.js";
 import useImgStore from "@/store/img.js";
 
 const router = useRouter();
 const imgStore = useImgStore();
-const { bgIndex, getBgIndex, setBgIndex } = imgStore;
+const { getBgIndex, setBgIndex, getSizeIndex, setSizeIndex } = imgStore;
+const pageBgImgList = reactive(PageBgImgList);
+const bgSizeList = reactive(BgSizeList);
 const box = ref();
 const boxMove = ref(false);
 const startX = ref(0);
 const startY = ref(0);
 const weather = ref("");
-const bookList = ref(BookList);
-const searchValue = ref("");
-const pageBgImg = ref(0);
-const pageBgImgList = reactive(PageBgImgList);
-let mouseTimer = null;
-const controlDown = ref(false);
-const bgSizeList = ["100% 100%", "cover", "contain"];
-const bgSize = ref(0);
 const dateTime = ref(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
+const searchValue = ref("");
+const bookList = ref(BookList);
+const bgIndex = ref(getBgIndex);
+const controlDown = ref(false);
+const sizeIndex = ref(getSizeIndex);
 const ex = ref(1);
+let mouseTimer = null;
 
 // 鼠标按下
 const boxDown = (e) => {
@@ -115,7 +115,7 @@ const mousewheel = async (e) => {
     return;
   }
   mouseTimer = setTimeout(() => {
-    let index = pageBgImg.value;
+    let index = bgIndex.value;
     if (e.deltaY > 0) {
       if (index >= pageBgImgList.length - 1) {
         index = 0;
@@ -130,7 +130,7 @@ const mousewheel = async (e) => {
       }
     }
     setBgIndex(index);
-    pageBgImg.value = index;
+    bgIndex.value = index;
     clearTimeout(mouseTimer);
     mouseTimer = null;
   }, 1000);
@@ -146,24 +146,22 @@ const bgSrcChange = (e) => {
 };
 // 按左右键切换背景图的size
 const bgSizeChange = (e) => {
+  let index = sizeIndex.value;
   if (e.key === "ArrowLeft") {
-    let index = bgSize.value;
     index--;
     if (index < 0) {
       index = bgSizeList.length - 1;
     }
-    bgSize.value = index;
-    setStorage("bgSize", index);
+    sizeIndex.value = index;
   }
   if (e.key === "ArrowRight") {
-    let index = bgSize.value;
     index++;
     if (index > bgSizeList.length - 1) {
       index = 0;
     }
-    bgSize.value = index;
-    setStorage("bgSize", index);
+    sizeIndex.value = index;
   }
+  setSizeIndex(index);
 };
 // 监听键盘事件
 const keyDown = (e) => {
@@ -182,15 +180,11 @@ const keyDown = (e) => {
 };
 // 初始化背景图片,搜索框位置
 const initBox = () => {
-  if (getBgIndex !== null) {
-    pageBgImg.value = getBgIndex;
-  }
   let searchX = getStorage("searchX");
   if (searchX !== null) {
     box.value.style.left = searchX;
     box.value.style.top = getStorage("searchY");
   }
-  bgSize.value = getStorage("bgSize") || bgSize.value;
   ex.value = parseInt(getStorage("ex"));
 };
 // 获取当前时间
@@ -211,11 +205,13 @@ const setEx = () => {
 watch(
   () => imgStore.bgIndex,
   (e) => {
-    pageBgImg.value = e;
-  },
-  {
-    immediate: true,
-    deep: true,
+    bgIndex.value = e;
+  }
+);
+watch(
+  () => imgStore.sizeIndex,
+  (e) => {
+    sizeIndex.value = e;
   }
 );
 onMounted(() => {

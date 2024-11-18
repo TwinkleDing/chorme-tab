@@ -29,6 +29,9 @@ export const PageThImgList = [
 	"/bg/th/guo13.jpg",
 ];
 
+export const BgSizeList = ["100% 100%", "cover", "contain"];
+
+
 export const BookList = [
 	{
 		title: "百度",

@@ -1,7 +1,7 @@
 /*
  * @Author: twinkleding
  * @Date: 2024-11-15 11:00:20
- * @LastEditTime: 2024-11-15 11:08:01
+ * @LastEditTime: 2024-11-18 11:33:02
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\store\img.js
  * @Description:
@@ -14,11 +14,15 @@ export default defineStore("imgId", {
 	state: () => {
 		return {
 			bgIndex: getStorage("bgIndex"),
+			sizeIndex: getStorage("sizeIndex"),
 		};
 	},
 	getters: {
 		getBgIndex() {
 			return this.bgIndex;
+		},
+		getSizeIndex() {
+			return this.sizeIndex;
 		},
 	},
 
@@ -26,6 +30,10 @@ export default defineStore("imgId", {
 		setBgIndex(index) {
 			this.bgIndex = index;
 			setStorage("bgIndex", index);
+		},
+		setSizeIndex(index) {
+			this.sizeIndex = index;
+			setStorage("sizeIndex", index);
 		},
 	},
 });

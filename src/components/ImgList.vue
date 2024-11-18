@@ -1,44 +1,65 @@
 <template>
-  <div class="img-box">
-    <div class="ex" @click="ex = !ex">
-      <el-icon>
-        <DArrowRight v-if="ex" />
-        <DArrowLeft v-else />
-      </el-icon>
+  <div class="bg-box">
+    <div class="bg-size" v-show="!ex">
+      <div class="size-box size-box-1" @click="setBgSize(0)">
+        <div></div>
+      </div>
+      <div class="size-box size-box-2" @click="setBgSize(1)">
+        <div></div>
+      </div>
+      <div class="size-box size-box-3" @click="setBgSize(2)">
+        <div></div>
+      </div>
     </div>
-    <div v-show="!ex" class="box">
-      <el-scrollbar>
-        <div class="img-list" @mousewheel="mousewheel">
-          <div
-            :class="['img', bgIndex == index && 'active']"
-            v-for="(item, index) in PageThImgList"
-          >
-            <img :src="item" alt="" @click="setBg(index)" />
+    <div class="img-box">
+      <div class="ex" @click="ex = !ex">
+        <el-icon>
+          <DArrowRight v-if="ex" />
+          <DArrowLeft v-else />
+        </el-icon>
+      </div>
+      <div class="scroll-box" v-show="!ex">
+        <el-scrollbar>
+          <div class="img-list" @mousewheel="mousewheel">
+            <div
+              :class="['img', bgIndex == index && 'active']"
+              v-for="(item, index) in PageThImgList"
+            >
+              <img :src="item" alt="" @click="setBgIndex(index)" />
+            </div>
           </div>
-        </div>
-      </el-scrollbar>
+        </el-scrollbar>
+      </div>
     </div>
   </div>
 </template>
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { DArrowRight, DArrowLeft } from "@element-plus/icons-vue";
-import { PageThImgList } from "@/components/options.js";
+
+import { PageThImgList, BgSizeList } from "@/components/options.js";
 import useImgStore from "@/store/img.js";
 
 const imgStore = useImgStore();
-const { getBgIndex, setBgIndex } = imgStore;
 
 const imgWidth = 142;
 const ex = ref(true);
-const bgIndex = ref(getBgIndex);
+const bgIndex = ref(imgStore.getBgIndex);
+const sizeIndex = ref(imgStore.getSizeIndex);
 
 /**
  * 设置当前背景
+ * @params 下标
  */
-const setBg = (index) => {
-  setBgIndex(index);
+const setBgIndex = (index) => {
+  imgStore.setBgIndex(index);
   bgIndex.value = index;
+};
+/**
+ * 设置背景样式
+ */
+const setBgSize = (e) => {
+  imgStore.setSizeIndex(e)
 };
 
 /**
@@ -124,6 +145,17 @@ watch(
     bgIndex.value = newValue;
   }
 );
+
+watch(
+  () => imgStore.sizeIndex,
+  (e) => {
+    sizeIndex.value = e;
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
 watch(
   () => ex.value,
   (e) => {
@@ -135,18 +167,60 @@ onMounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.img-box {
+.bg-box {
   position: fixed;
   left: 0;
   bottom: 0;
   height: 102px;
+  max-width: calc(100% - 12px);
+  user-select: none;
+  .bg-size {
+    height: 32px;
+    position: absolute;
+    top: -31px;
+    left: 0;
+    border: 1px solid #cccccc88;
+    border-radius: 4px;
+    color: #cccccc88;
+    cursor: pointer;
+    .size-box {
+      width: 32px;
+      height: 18px;
+      border: 1px solid #cccccc;
+      cursor: pointer;
+      display: inline-block;
+      margin: 2px 4px 0;
+      padding: 1px;
+      &-1 {
+        div {
+          border: 1px solid #cccccc88;
+          width: 28px;
+          height: 14px;
+        }
+      }
+      &-2 {
+        div {
+          border: 1px solid #cccccc88;
+          width: 34px;
+          height: 22px;
+        }
+      }
+      &-3 {
+        div {
+          border: 1px solid #cccccc88;
+          width: 24px;
+          height: 14px;
+        }
+      }
+    }
+  }
+}
+.img-box {
   display: flex;
   border: 1px solid #aaa;
   border-radius: 0 10px 10px 0;
   overflow: hidden;
   max-width: 100%;
-  user-select: none;
-  max-width: calc(100% - 12px);
   .ex {
     width: 24px;
     height: 100%;
@@ -156,7 +230,7 @@ onMounted(() => {});
     background: #cccccc88;
     color: #fff;
   }
-  .box {
+  .scroll-box {
     height: 100%;
     padding: 0 6px;
     flex: 1;
