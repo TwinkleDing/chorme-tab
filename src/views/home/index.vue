@@ -38,37 +38,43 @@
     <img-list />
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { useRouter } from "vue-router";
 import { ref, watch, onMounted, reactive } from "vue";
 import { TopLeft, BottomRight } from "@element-plus/icons-vue";
-import { dateFormat } from "@/utils.js";
-import useImgStore from "@/store/img.js";
+import useImgStore from "@/store/img.ts";
 import ImgList from "@/components/ImgList.vue";
-import { setStorage, getStorage } from "@/utils.js";
+import { setStorage, getStorage, dateFormat } from "@/utils.ts";
 import { PageBgImgList, BgSizeList, BookList } from "@/components/Options.js";
 
 const router = useRouter();
 const imgStore = useImgStore();
-const { getBgIndex, setBgIndex, getSizeIndex, setSizeIndex } = imgStore;
+const {
+  getBgIndex,
+  setBgIndex,
+  getSizeIndex,
+  setSizeIndex,
+  getBoxEx,
+  setBoxEx,
+} = imgStore;
 const pageBgImgList = reactive(PageBgImgList);
 const bgSizeList = reactive(BgSizeList);
-const box = ref();
-const boxMove = ref(false);
-const startX = ref(0);
-const startY = ref(0);
-const weather = ref("");
-const dateTime = ref(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
-const searchValue = ref("");
-const bookList = ref(BookList);
-const bgIndex = ref(getBgIndex);
-const controlDown = ref(false);
-const sizeIndex = ref(getSizeIndex);
-const ex = ref(1);
-let mouseTimer = null;
+const box = ref<HTMLElement>();
+const boxMove = ref<boolean>(false);
+const startX = ref<number>(0);
+const startY = ref<number>(0);
+const weather = ref<string>("");
+const dateTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
+const searchValue = ref<string>("");
+const bookList = ref<Array[any]>(BookList);
+const bgIndex = ref<number>(getBgIndex);
+const controlDown = ref<boolean>(false);
+const sizeIndex = ref<number>(getSizeIndex);
+const ex = ref<boolean>(getBoxEx == "true" ? true : false);
+let mouseTimer: any = null;
 
 // 鼠标按下
-const boxDown = (e) => {
+const boxDown = (e: HTMLElement): void => {
   if (e.target.id === "box") {
     startX.value = e.offsetX;
     startY.value = e.offsetY;
@@ -81,7 +87,7 @@ const boxDown = (e) => {
   }
 };
 // 鼠标移动
-const pageMove = (e) => {
+const pageMove = (e: HTMLElement): void => {
   if (boxMove.value) {
     box.value.style.left = e.clientX - startX.value + "px";
     box.value.style.top = e.clientY - startY.value + "px";
@@ -90,27 +96,27 @@ const pageMove = (e) => {
   }
 };
 // 鼠标松开
-const boxUp = (e) => {
+const boxUp = (): void => {
   boxMove.value = false;
 };
 // 跳转书签
-const goBook = (e) => {
-  if (e.startsWith("http://") || e.startsWith("https://")) {
-    window.open(e);
+const goBook = (path: string): void => {
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    window.open(path);
   } else {
-    router.push(e);
+    router.push(path);
   }
 };
-const enter = () => {
+const enter = (): void => {
   if (searchValue.value.startsWith("www.")) {
     window.open("http://" + searchValue.value);
-    return;
+  } else {
+    window.open("http://www.baidu.com/s?wd=" + searchValue.value);
+    searchValue.value = "";
   }
-  window.open("http://www.baidu.com/s?wd=" + searchValue.value);
-  searchValue.value = "";
 };
 // 鼠标滚轮切换背景图片
-const mousewheel = async (e) => {
+const mousewheel = async (e: HTMLElement): void => {
   if (mouseTimer || controlDown.value) {
     return;
   }
@@ -136,7 +142,7 @@ const mousewheel = async (e) => {
   }, 1000);
 };
 // 按下上下键盘切换背景图
-const bgSrcChange = (e) => {
+const bgSrcChange = (e: HTMLElement): void => {
   if (e.key === "ArrowUp") {
     mousewheel({ deltaY: -1 });
   }
@@ -145,7 +151,7 @@ const bgSrcChange = (e) => {
   }
 };
 // 按左右键切换背景图的size
-const bgSizeChange = (e) => {
+const bgSizeChange = (e: HTMLElement): void => {
   let index = sizeIndex.value;
   if (e.key === "ArrowLeft") {
     index--;
@@ -164,43 +170,40 @@ const bgSizeChange = (e) => {
   setSizeIndex(index);
 };
 // 监听键盘事件
-const keyDown = (e) => {
-  document.addEventListener("keydown", (e) => {
+const keyDown = (): void => {
+  document.addEventListener("keydown", (e: HTMLElement): void => {
     if (e.key === "Control") {
       controlDown.value = true;
     }
-    bgSizeChange(e);
-    bgSrcChange(e);
+    if (e.target.localName == "body") {
+      bgSizeChange(e);
+      bgSrcChange(e);
+    }
   });
-  document.addEventListener("keyup", (e) => {
+  document.addEventListener("keyup", (e: HTMLElement): void => {
     if (e.key === "Control") {
       controlDown.value = false;
     }
   });
 };
 // 初始化背景图片,搜索框位置
-const initBox = () => {
+const initBox = (): void => {
   let searchX = getStorage("searchX");
   if (searchX !== null) {
     box.value.style.left = searchX;
     box.value.style.top = getStorage("searchY");
   }
-  ex.value = parseInt(getStorage("ex"));
 };
 // 获取当前时间
-const getTime = () => {
+const getTime = (): void => {
   setInterval(() => {
     dateTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
   }, 1000);
 };
 // 是否收缩
-const setEx = () => {
-  if (ex.value == 1) {
-    ex.value = 0;
-  } else {
-    ex.value = 1;
-  }
-  setStorage("ex", ex.value);
+const setEx = (): void => {
+  ex.value = !ex.value;
+  setBoxEx(ex.value);
 };
 watch(
   () => imgStore.bgIndex,

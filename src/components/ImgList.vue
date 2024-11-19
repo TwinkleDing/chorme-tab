@@ -48,7 +48,7 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
 import { DArrowRight, DArrowLeft } from "@element-plus/icons-vue";
-import useImgStore from "@/store/img.js";
+import useImgStore from "@/store/img.ts";
 import { PageThImgList, BgSizeList } from "@/components/Options.js";
 
 const imgStore = useImgStore();

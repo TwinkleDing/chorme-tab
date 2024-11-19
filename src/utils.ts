@@ -1,17 +1,17 @@
-export const setStorage = (key, value) => {
+export const setStorage = (key: string, value: any): void => {
 	localStorage.setItem(key, value);
 };
 
-export const getStorage = (key) => {
+export const getStorage = (key: string): string => {
 	return localStorage.getItem(key);
 };
 
-export function dateFormat(date, block) {
-	if (!date) {
+export function dateFormat(time: Date, block: any): string {
+	if (!time) {
 		return "";
 	}
-	let format = block || "yyyy-MM-dd";
-	date = new Date(date);
+	let format: string = block || "yyyy-MM-dd";
+	const date: Date = new Date(time);
 	const map = {
 		M: date.getMonth() + 1, // 月份
 		d: date.getDate(), // 日
