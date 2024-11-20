@@ -204,8 +204,7 @@ const keyDown = (): void => {
     if (e.key === "Control") {
       controlDown.value = true;
     }
-    console.log(e.target.localName)
-    if (e.target.localName == "body" && bgMode.value == FULL_SCREEN) {
+    if (bgMode.value == FULL_SCREEN && e.target.localName == "body") {
       bgSizeChange(e);
       bgSrcChange(e);
     }
