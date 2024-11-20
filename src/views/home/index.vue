@@ -21,7 +21,13 @@
         }"
       ></div>
     </div>
-    <div id="box" ref="box" @mousedown="boxDown" @mouseup="boxUp">
+    <div
+      id="box"
+      ref="box"
+      :class="['box', !boxUnfold && 'box-flod']"
+      @mousedown="boxDown"
+      @mouseup="boxUp"
+    >
       <div class="tips">
         <span>{{ dateTime }}</span>
       </div>
@@ -34,15 +40,15 @@
           @keyup.enter.native="enter"
         />
       </div>
-      <div v-show="ex" id="book" class="book">
+      <div id="book" class="book">
         <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
           <img :src="item.icon" alt="" />
           <div class="book-title">{{ item.title }}</div>
         </div>
       </div>
-      <div class="ex" @click="setEx">
+      <div class="boxUnfold" @click="setUnfold">
         <el-icon>
-          <TopLeft v-if="ex" />
+          <TopLeft v-if="boxUnfold" />
           <BottomRight v-else />
         </el-icon>
       </div>
@@ -74,26 +80,26 @@ const {
   setBgIndex,
   getSizeIndex,
   setSizeIndex,
-  getBoxEx,
-  setBoxEx,
+  getBoxUnfold,
+  setBoxUnfold,
   getBgMode,
 } = imgStore;
 const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const bgSizeList = reactive(BgSizeList);
 const box = ref<HTMLElement>();
-const boxMove = ref<boolean>(false);
 const startX = ref<number>(0);
 const startY = ref<number>(0);
-const weather = ref<string>("");
-const dateTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
-const searchValue = ref<string>("");
-const bookList = ref<Array[any]>(BookList);
 const bgIndex = ref<number>(getBgIndex);
-const controlDown = ref<boolean>(false);
 const sizeIndex = ref<number>(getSizeIndex);
-const ex = ref<boolean>(getBoxEx == "true" ? true : false);
+const weather = ref<string>("");
+const searchValue = ref<string>("");
 const bgMode = ref<string>(getBgMode);
+const dateTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
+const boxMove = ref<boolean>(false);
+const controlDown = ref<boolean>(false);
+const boxUnfold = ref<boolean>(getBoxUnfold == "true" ? true : false);
+const bookList = ref<Array[any]>(BookList);
 let mouseTimer: any = null;
 
 // 鼠标按下
@@ -224,9 +230,9 @@ const getTime = (): void => {
   }, 1000);
 };
 // 是否收缩
-const setEx = (): void => {
-  ex.value = !ex.value;
-  setBoxEx(ex.value);
+const setUnfold = (): void => {
+  boxUnfold.value = !boxUnfold.value;
+  setBoxUnfold(boxUnfold.value);
 };
 
 watch(
@@ -282,10 +288,11 @@ onMounted(() => {
       width: 25%;
       min-width: 480px;
       height: 33.33333%;
+      background-repeat: no-repeat;
     }
   }
 }
-#box {
+.box {
   width: 622px;
   border: 1px solid #aaa;
   cursor: pointer;
@@ -295,7 +302,7 @@ onMounted(() => {
   top: 20%;
   user-select: none;
   z-index: 2;
-  padding: 0 20px 20px;
+  padding: 0 20px;
 
   .tips {
     display: inline-block;
@@ -321,6 +328,7 @@ onMounted(() => {
   .book {
     display: inline-block;
     height: 280px;
+    margin-bottom: 20px;
     &-item {
       display: inline-block;
       text-align: center;
@@ -339,7 +347,7 @@ onMounted(() => {
       font-size: 16px;
     }
   }
-  .ex {
+  .boxUnfold {
     position: absolute;
     bottom: 0;
     right: 5px;
@@ -349,5 +357,23 @@ onMounted(() => {
     cursor: pointer;
   }
 }
+.box-flod {
+  .book {
+    height: 20px;
+    margin-bottom: 0;
+    position: relative;
+    top: -8px;
+    .book-item {
+      margin: 0 10px 0 0;
+      img {
+        height: 20px;
+        width: 20px;
+        margin: 0;
+      }
+      .book-title {
+        display: none;
+      }
+    }
+  }
+}
 </style>
-@/assets/utils/utils

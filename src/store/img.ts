@@ -1,7 +1,7 @@
 /*
  * @Author: twinkleding
  * @Date: 2024-11-15 11:00:20
- * @LastEditTime: 2024-11-20 10:11:28
+ * @LastEditTime: 2024-11-20 14:03:19
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\store\img.ts
  * @Description:
@@ -16,7 +16,7 @@ export default defineStore("imgId", {
 		return {
 			bgIndex: getStorage("bgIndex") || 0,
 			sizeIndex: getStorage("sizeIndex") || 0,
-			boxEx: getStorage("boxEx") || "true",
+			boxUnfold: getStorage("boxUnfold") || "true",
 			bgMode: getStorage("bgMode") || FULL_SCREEN,
 		};
 	},
@@ -27,8 +27,8 @@ export default defineStore("imgId", {
 		getSizeIndex(): string {
 			return this.sizeIndex;
 		},
-		getBoxEx(): string {
-			return this.boxEx;
+		getBoxUnfold(): string {
+			return this.boxUnfold;
 		},
 		getBgMode(): string {
 			return this.bgMode;
@@ -44,9 +44,9 @@ export default defineStore("imgId", {
 			this.sizeIndex = index;
 			setStorage("sizeIndex", index);
 		},
-		setBoxEx(ex: boolean): void {
-			this.boxEx = ex;
-			setStorage("boxEx", ex);
+		setBoxUnfold(unfold: boolean): void {
+			this.boxUnfold = unfold;
+			setStorage("boxUnfold", unfold);
 		},
 		setBgMode(mode: string): void {
 			this.bgMode = mode;
