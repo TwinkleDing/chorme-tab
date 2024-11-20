@@ -4,11 +4,23 @@
     id="page"
     ref="page"
     @mousemove="pageMove"
-    :style="{
-      backgroundImage: `url(${pageBgImgList[bgIndex]})`,
-      backgroundSize: bgSizeList[sizeIndex],
-    }"
+    :style="
+      bgMode === FULL_SCREEN
+        ? {
+            backgroundImage: `url(${pageBgImgList[bgIndex]})`,
+            backgroundSize: bgSizeList[sizeIndex],
+          }
+        : {}
+    "
   >
+    <div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
+      <div
+        v-for="item in pageGridImgList"
+        :style="{
+          backgroundImage: `url(${item})`,
+        }"
+      ></div>
+    </div>
     <div id="box" ref="box" @mousedown="boxDown" @mouseup="boxUp">
       <div class="tips">
         <span>{{ dateTime }}</span>
@@ -35,7 +47,8 @@
         </el-icon>
       </div>
     </div>
-    <img-list />
+    <img-list v-if="bgMode == FULL_SCREEN" />
+    <grid />
   </div>
 </template>
 <script setup lang="ts">
@@ -44,8 +57,15 @@ import { ref, watch, onMounted, reactive } from "vue";
 import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import useImgStore from "@/store/img.ts";
 import ImgList from "@/components/ImgList.vue";
-import { setStorage, getStorage, dateFormat } from "@/utils.ts";
-import { PageBgImgList, BgSizeList, BookList } from "@/components/Options.js";
+import Grid from "@/components/Grid.vue";
+import { setStorage, getStorage, dateFormat } from "@/utils";
+import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
+import {
+  PageBgImgList,
+  PageGridImgList,
+  BgSizeList,
+  BookList,
+} from "@/components/Options.js";
 
 const router = useRouter();
 const imgStore = useImgStore();
@@ -56,8 +76,10 @@ const {
   setSizeIndex,
   getBoxEx,
   setBoxEx,
+  getBgMode,
 } = imgStore;
 const pageBgImgList = reactive(PageBgImgList);
+const pageGridImgList = reactive(PageGridImgList);
 const bgSizeList = reactive(BgSizeList);
 const box = ref<HTMLElement>();
 const boxMove = ref<boolean>(false);
@@ -71,6 +93,7 @@ const bgIndex = ref<number>(getBgIndex);
 const controlDown = ref<boolean>(false);
 const sizeIndex = ref<number>(getSizeIndex);
 const ex = ref<boolean>(getBoxEx == "true" ? true : false);
+const bgMode = ref<string>(getBgMode);
 let mouseTimer: any = null;
 
 // 鼠标按下
@@ -205,6 +228,7 @@ const setEx = (): void => {
   ex.value = !ex.value;
   setBoxEx(ex.value);
 };
+
 watch(
   () => imgStore.bgIndex,
   (e) => {
@@ -215,6 +239,12 @@ watch(
   () => imgStore.sizeIndex,
   (e) => {
     sizeIndex.value = e;
+  }
+);
+watch(
+  () => imgStore.bgMode,
+  (e) => {
+    bgMode.value = e;
   }
 );
 onMounted(() => {
@@ -230,8 +260,30 @@ onMounted(() => {
   width: 100%;
   position: relative;
   color: #fff;
-  z-index: 0;
   background-repeat: no-repeat;
+  &-bg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+  }
+  &-bg-box {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 0;
+    height: 100%;
+    width: 100%;
+    min-width: 1920px;
+    min-height: 953px;
+    display: flex;
+    flex-wrap: wrap;
+    div {
+      width: 25%;
+      min-width: 480px;
+      height: 33.33333%;
+    }
+  }
 }
 #box {
   width: 622px;
@@ -298,3 +350,4 @@ onMounted(() => {
   }
 }
 </style>
+@/assets/utils/utils

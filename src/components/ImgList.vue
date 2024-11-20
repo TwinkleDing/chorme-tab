@@ -1,28 +1,5 @@
 <template>
   <div class="bg-box">
-    <div class="bg-size" v-show="!ex">
-      <div
-        :class="['size-box', 'size-box-0', sizeIndex == 0 && 'size-active']"
-        @click="setBgSize(0)"
-      >
-        <div class="screen"></div>
-        <div class="bg"></div>
-      </div>
-      <div
-        :class="['size-box', 'size-box-1', sizeIndex == 1 && 'size-active']"
-        @click="setBgSize(1)"
-      >
-        <div class="screen"></div>
-        <div class="bg"></div>
-      </div>
-      <div
-        :class="['size-box', 'size-box-2', sizeIndex == 2 && 'size-active']"
-        @click="setBgSize(2)"
-      >
-        <div class="screen"></div>
-        <div class="bg"></div>
-      </div>
-    </div>
     <div class="img-box">
       <div class="ex" @click="ex = !ex">
         <el-icon>
@@ -66,12 +43,7 @@ const setBgIndex = (index) => {
   imgStore.setBgIndex(index);
   bgIndex.value = index;
 };
-/**
- * 设置背景样式
- */
-const setBgSize = (e) => {
-  imgStore.setSizeIndex(e);
-};
+
 
 /**
  * 鼠标滚动，设置滚动条位置
@@ -185,68 +157,6 @@ onMounted(() => {});
   height: 102px;
   max-width: calc(100% - 12px);
   user-select: none;
-  .bg-size {
-    height: 32px;
-    position: absolute;
-    top: -31px;
-    left: 0;
-    border: 1px solid #cccccc88;
-    border-radius: 4px;
-    color: #cccccc88;
-    cursor: pointer;
-    .size-box {
-      display: inline-block;
-      position: relative;
-      width: 34px;
-      height: 20px;
-      margin: 2px 8px 0;
-      .screen {
-        width: 34px;
-        height: 20px;
-        border: 1px solid #cccccc;
-        cursor: pointer;
-        position: absolute;
-        left: 0;
-        top: 0;
-        z-index: 10;
-      }
-      .bg {
-        position: absolute;
-        left: 2px;
-        top: 2px;
-      }
-      &-0 {
-        .bg {
-          border: 1px solid #cccccc88;
-          width: 29px;
-          height: 15px;
-        }
-      }
-      &-1 {
-        .bg {
-          border: 1px solid #cccccc88;
-          width: 36px;
-          height: 22px;
-        }
-      }
-      &-2 {
-        .bg {
-          border: 1px solid #cccccc88;
-          width: 24px;
-          height: 15px;
-        }
-      }
-    }
-    .size-active {
-      .screen {
-        background: #ffffff88;
-      }
-      .bg {
-        background: #aaa;
-        z-index: 0;
-      }
-    }
-  }
 }
 .img-box {
   display: flex;
