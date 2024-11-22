@@ -5,8 +5,8 @@
 	"description": "用爱豆的图片做成浏览器首页插件，虽然丧失后谷歌原来的功能，增加观赏性与趣味性",
 	"author": "二丁一然",
 	"icons": {
-		"16": "./img/favicon.png",
-		"48": "./img/favicon.png"
+		"16": "./favicon.png",
+		"48": "./favicon.png"
 	},
 	"chrome_url_overrides": {
 		"newtab": "./index.html"
