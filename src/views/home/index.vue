@@ -1,60 +1,67 @@
 <template>
-  <!-- @mousewheel="mousewheel" -->
-  <div
-    id="page"
-    ref="page"
-    @mousemove="pageMove"
-    :style="
-      bgMode === FULL_SCREEN
-        ? {
-            backgroundImage: `url(${pageBgImgList[bgIndex]})`,
-            backgroundSize: bgSizeList[sizeIndex],
-          }
-        : {}
-    "
-  >
-    <div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
-      <div
-        v-for="item in pageGridImgList"
-        :style="{
-          backgroundImage: `url(${item})`,
-        }"
-      ></div>
-    </div>
+  <div class="home" @mousemove="pageMove">
     <div
-      id="box"
-      ref="box"
-      :class="['box', !boxUnfold && 'box-flod']"
-      @mousedown="boxDown"
-      @mouseup="boxUp"
+      id="page"
+      ref="page"
+      @mousewheel="mousewheel"
+      @mousedown="bgDown"
+      @mouseup="bgUp"
+      @dblclick="resetBg"
+      :style="
+        bgMode === FULL_SCREEN
+          ? {
+              backgroundImage: `url(${pageBgImgList[bgIndex]})`,
+              backgroundSize: bgSizeList[sizeIndex],
+            }
+          : {}
+      "
     >
-      <div class="tips">
-        <span>{{ dateTime }}</span>
+      <div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
+        <div
+          v-for="item in pageGridImgList"
+          :style="{
+            backgroundImage: `url(${item})`,
+          }"
+        ></div>
       </div>
-      <div class="search-input">
-        <input
-          v-model="searchValue"
-          ref="input"
-          placeholder="搜索..."
-          type="text"
-          @keyup.enter.native="enter"
-        />
-      </div>
-      <div id="book" class="book">
-        <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-          <img :src="item.icon" alt="" />
-          <div class="book-title">{{ item.title }}</div>
+    </div>
+
+    <div>
+      <div
+        id="box"
+        ref="box"
+        :class="['box', !boxUnfold && 'box-flod']"
+        @mousedown="boxDown"
+        @mouseup="boxUp"
+      >
+        <div class="tips">
+          <span>{{ dateTime }}</span>
+        </div>
+        <div class="search-input">
+          <input
+            v-model="searchValue"
+            ref="input"
+            placeholder="搜索..."
+            type="text"
+            @keyup.enter.native="enter"
+          />
+        </div>
+        <div id="book" class="book">
+          <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
+            <img :src="item.icon" alt="" />
+            <div class="book-title">{{ item.title }}</div>
+          </div>
+        </div>
+        <div class="boxUnfold" @click="setUnfold">
+          <el-icon>
+            <TopLeft v-if="boxUnfold" />
+            <BottomRight v-else />
+          </el-icon>
         </div>
       </div>
-      <div class="boxUnfold" @click="setUnfold">
-        <el-icon>
-          <TopLeft v-if="boxUnfold" />
-          <BottomRight v-else />
-        </el-icon>
-      </div>
+      <img-list v-if="bgMode == FULL_SCREEN" />
+      <grid />
     </div>
-    <img-list v-if="bgMode == FULL_SCREEN" />
-    <grid />
   </div>
 </template>
 <script setup lang="ts">
@@ -83,6 +90,14 @@ const {
   getBoxUnfold,
   setBoxUnfold,
   getBgMode,
+  getBgW,
+  setBgW,
+  getBgH,
+  setBgH,
+  getBgX,
+  setBgX,
+  getBgY,
+  setBgY,
 } = imgStore;
 const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
@@ -97,36 +112,59 @@ const searchValue = ref<string>("");
 const bgMode = ref<string>(getBgMode);
 const dateTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 const boxMove = ref<boolean>(false);
+const bgMove = ref<boolean>(false);
 const controlDown = ref<boolean>(false);
 const boxUnfold = ref<boolean>(getBoxUnfold == "true" ? true : false);
 const bookList = ref<Array[any]>(BookList);
 let mouseTimer: any = null;
 
-// 鼠标按下
-const boxDown = (e: HTMLElement): void => {
-  if (e.target.id === "box") {
-    startX.value = e.offsetX;
-    startY.value = e.offsetY;
-    boxMove.value = true;
-  }
-  if (e.target.id === "book") {
-    startX.value = e.offsetX + 21;
-    startY.value = e.offsetY + 101;
-    boxMove.value = true;
-  }
-};
 // 鼠标移动
 const pageMove = (e: HTMLElement): void => {
-  if (boxMove.value) {
+  if (boxMove.value && e.target.id === "box") {
     box.value.style.left = e.clientX - startX.value + "px";
     box.value.style.top = e.clientY - startY.value + "px";
     setStorage("searchX", box.value.style.left);
     setStorage("searchY", box.value.style.top);
+  } else {
+    boxMove.value = false;
+  }
+  if (bgMove.value && e.target.id === "page") {
+    console.log(page.clientWidth / 2 - (e.clientX - startX.value));
+    // if (page.clientWidth / 2 - (e.clientX - startX.value) < 2) {
+    // }
+    page.style.left = e.clientX - startX.value + "px";
+    // if (page.clientHeight / 2 - (e.clientY - startY.value) < 2) {
+    // }
+    page.style.top = e.clientY - startY.value + "px";
+    setBgX(page.style.left);
+    setBgY(page.style.top);
+  } else {
+    bgMove.value = false;
+  }
+};
+// 鼠标按下
+const boxDown = (e: HTMLElement): void => {
+  boxMove.value = true;
+  if (e.target.id === "box") {
+    startX.value = e.offsetX;
+    startY.value = e.offsetY;
+  }
+  if (e.target.id === "book") {
+    startX.value = e.offsetX + 21;
+    startY.value = e.offsetY + 101;
   }
 };
 // 鼠标松开
 const boxUp = (): void => {
   boxMove.value = false;
+};
+const bgDown = (e: HTMLElement): void => {
+  bgMove.value = true;
+  startX.value = e.offsetX - page.clientWidth / 2;
+  startY.value = e.offsetY - page.clientHeight / 2;
+};
+const bgUp = (): void => {
+  bgMove.value = false;
 };
 // 跳转书签
 const goBook = (path: string): void => {
@@ -144,14 +182,33 @@ const enter = (): void => {
     searchValue.value = "";
   }
 };
-// 鼠标滚轮切换背景图片
-const mousewheel = async (e: HTMLElement): void => {
+
+const mousewheel = (e: HTMLElement): void => {
+  if (bgMode === GRID_SCREEN || controlDown.value) return;
+  let width = page.style.width.replace(/[^0-9|.]/gi, "") || page.clientWidth;
+  let height = page.style.height.replace(/[^0-9|.]/gi, "") || page.clientHeight;
+  width = Number(width);
+  height = Number(height);
+  if (e.deltaY < 0) {
+    width *= 1.1;
+    height *= 1.1;
+  } else {
+    width /= 1.1;
+    height /= 1.1;
+  }
+  page.style.width = `${parseInt(width)}px`;
+  page.style.height = `${parseInt(height)}px`;
+  setBgW(page.style.width);
+  setBgH(page.style.height);
+};
+// 切换背景图片
+const bgChange = async (type: number): void => {
   if (mouseTimer || controlDown.value) {
     return;
   }
   mouseTimer = setTimeout(() => {
     let index = bgIndex.value;
-    if (e.deltaY > 0) {
+    if (type > 0) {
       if (index >= pageBgImgList.length - 1) {
         index = 0;
       } else {
@@ -173,10 +230,10 @@ const mousewheel = async (e: HTMLElement): void => {
 // 按下上下键盘切换背景图
 const bgSrcChange = (e: HTMLElement): void => {
   if (e.key === "ArrowUp") {
-    mousewheel({ deltaY: -1 });
+    bgChange(-1);
   }
   if (e.key === "ArrowDown") {
-    mousewheel({ deltaY: 1 });
+    bgChange(1);
   }
 };
 // 按左右键切换背景图的size
@@ -214,6 +271,22 @@ const keyDown = (): void => {
       controlDown.value = false;
     }
   });
+};
+const initBg = (): void => {
+  getBgW && (page.style.width = getBgW);
+  getBgH && (page.style.height = getBgH);
+  getBgX && (page.style.left = getBgX);
+  getBgY && (page.style.top = getBgY);
+};
+const resetBg = (): void => {
+  page.style.width = "";
+  page.style.height = "";
+  page.style.left = "";
+  page.style.top = "";
+  setBgW("");
+  setBgH("");
+  setBgX("");
+  setBgY("");
 };
 // 初始化背景图片,搜索框位置
 const initBox = (): void => {
@@ -254,6 +327,7 @@ watch(
   }
 );
 onMounted(() => {
+  initBg();
   initBox();
   keyDown();
   getTime();
@@ -261,10 +335,18 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-#page {
+.home {
   height: 100%;
   width: 100%;
   position: relative;
+}
+#page {
+  height: calc(100% + 1px);
+  width: calc(100% + 1px);
+  position: fixed;
+  left: calc(50% - 1px);
+  top: calc(50% - 1px);
+  translate: -50% -50%;
   color: #fff;
   background-repeat: no-repeat;
   &-bg {
@@ -293,11 +375,12 @@ onMounted(() => {
   }
 }
 .box {
+  color: #fff;
   width: 622px;
   border: 1px solid #aaa;
   cursor: pointer;
   border-radius: 20px;
-  position: absolute;
+  position: fixed;
   left: 40%;
   top: 20%;
   user-select: none;

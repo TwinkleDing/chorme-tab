@@ -1,7 +1,7 @@
 /*
  * @Author: twinkleding
  * @Date: 2024-11-15 11:00:20
- * @LastEditTime: 2024-11-20 14:03:19
+ * @LastEditTime: 2024-11-22 16:13:50
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\store\img.ts
  * @Description:
@@ -18,6 +18,10 @@ export default defineStore("imgId", {
 			sizeIndex: getStorage("sizeIndex") || 0,
 			boxUnfold: getStorage("boxUnfold") || "true",
 			bgMode: getStorage("bgMode") || FULL_SCREEN,
+			bgW: getStorage("bgW"),
+			bgH: getStorage("bgH"),
+			bgX: getStorage("bgX"),
+			bgY: getStorage("bgY"),
 		};
 	},
 	getters: {
@@ -32,6 +36,18 @@ export default defineStore("imgId", {
 		},
 		getBgMode(): string {
 			return this.bgMode;
+		},
+		getBgW(): string {
+			return this.bgW;
+		},
+		getBgH(): string {
+			return this.bgH;
+		},
+		getBgX(): string {
+			return this.bgX;
+		},
+		getBgY(): string {
+			return this.bgY;
 		},
 	},
 
@@ -51,6 +67,22 @@ export default defineStore("imgId", {
 		setBgMode(mode: string): void {
 			this.bgMode = mode;
 			setStorage("bgMode", mode);
+		},
+		setBgW(w: string): void {
+			this.bgW = w;
+			setStorage("bgW", w);
+		},
+		setBgH(h: string): void {
+			this.bgH = h;
+			setStorage("bgX", h);
+		},
+		setBgX(x: string): void {
+			this.bgX = x;
+			setStorage("bgX", x);
+		},
+		setBgY(y: string): void {
+			this.bgY = y;
+			setStorage("bgY", y);
 		},
 	},
 });
