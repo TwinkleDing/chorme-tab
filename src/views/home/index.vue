@@ -120,22 +120,23 @@ let mouseTimer: any = null;
 
 // 鼠标移动
 const pageMove = (e: HTMLElement): void => {
+  const moveX = e.clientX - startX.value;
+  const moveY = e.clientY - startY.value;
   if (boxMove.value && e.target.id === "box") {
-    box.value.style.left = e.clientX - startX.value + "px";
-    box.value.style.top = e.clientY - startY.value + "px";
+    box.value.style.left = moveX + "px";
+    box.value.style.top = moveY + "px";
     setStorage("searchX", box.value.style.left);
     setStorage("searchY", box.value.style.top);
   } else {
     boxMove.value = false;
   }
   if (bgMove.value && e.target.id === "page") {
-    console.log(page.clientWidth / 2 - (e.clientX - startX.value));
-    // if (page.clientWidth / 2 - (e.clientX - startX.value) < 2) {
+    // if (page.clientWidth / 2 - moveX < 2) {
     // }
-    page.style.left = e.clientX - startX.value + "px";
-    // if (page.clientHeight / 2 - (e.clientY - startY.value) < 2) {
+    // if (page.clientHeight / 2 - (moveY) < 2) {
     // }
-    page.style.top = e.clientY - startY.value + "px";
+    page.style.left = moveX + "px";
+    page.style.top = moveY + "px";
     setBgX(page.style.left);
     setBgY(page.style.top);
   } else {
@@ -189,6 +190,7 @@ const mousewheel = (e: HTMLElement): void => {
   let height = page.style.height.replace(/[^0-9|.]/gi, "") || page.clientHeight;
   width = Number(width);
   height = Number(height);
+  if (width < 800 && e.deltaY > 0) return;
   if (e.deltaY < 0) {
     width *= 1.1;
     height *= 1.1;

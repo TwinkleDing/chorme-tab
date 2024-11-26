@@ -1,10 +1,10 @@
 <template>
-  <div class="bg-box">
+  <div id="bg-box" class="bg-box">
     <div class="img-box">
-      <div class="ex" @click="ex = !ex">
+      <div id="ex" class="ex" @click="ex = !ex">
         <el-icon>
-          <DArrowRight v-if="ex" />
-          <DArrowLeft v-else />
+          <DArrowRight v-show="ex" />
+          <DArrowLeft v-show="!ex" />
         </el-icon>
       </div>
       <div class="scroll-box" v-show="!ex">
@@ -43,7 +43,6 @@ const setBgIndex = (index) => {
   imgStore.setBgIndex(index);
   bgIndex.value = index;
 };
-
 
 /**
  * 鼠标滚动，设置滚动条位置
@@ -146,7 +145,18 @@ watch(
   }
 );
 
-onMounted(() => {});
+onMounted(() => {
+  document.addEventListener("click", function (event) {
+    // 获取盒子元素
+    const box = document.getElementById("bg-box");
+    // 检测点击是否发生在盒子外部
+    if (!box.contains(event.target) && ex.value == false) {
+      // 如果点击发生在盒子外部，则关闭盒子
+      // box.style.display = "none"; // 或者其他关闭盒子的方法，例如隐藏或移除盒子
+      ex.value = true;
+    }
+  });
+});
 </script>
 
 <style lang="scss" scoped>

@@ -1,7 +1,7 @@
 /*
  * @Author: twinkleding
  * @Date: 2024-11-15 11:00:20
- * @LastEditTime: 2024-11-22 16:13:50
+ * @LastEditTime: 2024-11-26 10:30:52
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\store\img.ts
  * @Description:
@@ -74,7 +74,7 @@ export default defineStore("imgId", {
 		},
 		setBgH(h: string): void {
 			this.bgH = h;
-			setStorage("bgX", h);
+			setStorage("bgH", h);
 		},
 		setBgX(x: string): void {
 			this.bgX = x;
