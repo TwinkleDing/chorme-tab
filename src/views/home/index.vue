@@ -1,3 +1,11 @@
+<!--
+ * @Author: twinkleding
+ * @Date: 2024-11-12 11:06:04
+ * @LastEditTime: 2024-11-28 14:45:01
+ * @LastEditors: twinkleding
+ * @FilePath: \chorme-tab\src\views\home\index.vue
+ * @Description: 
+-->
 <template>
   <div class="home" @mousemove="pageMove">
     <div
@@ -7,15 +15,21 @@
       @mousedown="bgDown"
       @mouseup="bgUp"
       @dblclick="resetBg"
-      :style="
+    >
+      <!-- :style="
         bgMode === FULL_SCREEN
           ? {
               backgroundImage: `url(${pageBgImgList[bgIndex]})`,
               backgroundSize: bgSizeList[sizeIndex],
             }
           : {}
-      "
-    >
+      " -->
+      <img
+        v-if="bgMode === FULL_SCREEN"
+        :src="pageBgImgList[bgIndex]"
+        :style="bgSizeList[sizeIndex]"
+        draggable="false"
+      />
       <div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
         <div
           v-for="item in pageGridImgList"
@@ -26,42 +40,40 @@
       </div>
     </div>
 
-    <div>
-      <div
-        id="box"
-        ref="box"
-        :class="['box', !boxUnfold && 'box-flod']"
-        @mousedown="boxDown"
-        @mouseup="boxUp"
-      >
-        <div class="tips">
-          <span>{{ dateTime }}</span>
-        </div>
-        <div class="search-input">
-          <input
-            v-model="searchValue"
-            ref="input"
-            placeholder="搜索..."
-            type="text"
-            @keyup.enter.native="enter"
-          />
-        </div>
-        <div id="book" class="book">
-          <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-            <img :src="item.icon" alt="" />
-            <div class="book-title">{{ item.title }}</div>
-          </div>
-        </div>
-        <div class="boxUnfold" @click="setUnfold">
-          <el-icon>
-            <TopLeft v-if="boxUnfold" />
-            <BottomRight v-else />
-          </el-icon>
+    <div
+      id="box"
+      ref="box"
+      :class="['box', !boxUnfold && 'box-flod']"
+      @mousedown="boxDown"
+      @mouseup="boxUp"
+    >
+      <div class="tips">
+        <span>{{ dateTime }}</span>
+      </div>
+      <div class="search-input">
+        <input
+          v-model="searchValue"
+          ref="input"
+          placeholder="搜索..."
+          type="text"
+          @keyup.enter.native="enter"
+        />
+      </div>
+      <div id="book" class="book">
+        <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
+          <img :src="item.icon" alt="" />
+          <div class="book-title">{{ item.title }}</div>
         </div>
       </div>
-      <img-list v-if="bgMode == FULL_SCREEN" />
-      <grid />
+      <div class="boxUnfold" @click="setUnfold">
+        <el-icon>
+          <TopLeft v-if="boxUnfold" />
+          <BottomRight v-else />
+        </el-icon>
+      </div>
     </div>
+    <img-list v-if="bgMode == FULL_SCREEN" />
+    <grid />
   </div>
 </template>
 <script setup lang="ts">
@@ -102,7 +114,6 @@ const {
 const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const bgSizeList = reactive(BgSizeList);
-const box = ref<HTMLElement>();
 const startX = ref<number>(0);
 const startY = ref<number>(0);
 const bgIndex = ref<number>(getBgIndex);
@@ -111,8 +122,8 @@ const weather = ref<string>("");
 const searchValue = ref<string>("");
 const bgMode = ref<string>(getBgMode);
 const dateTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
-const boxMove = ref<boolean>(false);
-const bgMove = ref<boolean>(false);
+const boxMoving = ref<boolean>(false);
+const bgMoving = ref<boolean>(false);
 const controlDown = ref<boolean>(false);
 const boxUnfold = ref<boolean>(getBoxUnfold == "true" ? true : false);
 const bookList = ref<Array[any]>(BookList);
@@ -122,30 +133,28 @@ let mouseTimer: any = null;
 const pageMove = (e: HTMLElement): void => {
   const moveX = e.clientX - startX.value;
   const moveY = e.clientY - startY.value;
-  if (boxMove.value && e.target.id === "box") {
-    box.value.style.left = moveX + "px";
-    box.value.style.top = moveY + "px";
-    setStorage("searchX", box.value.style.left);
-    setStorage("searchY", box.value.style.top);
+  if (boxMoving.value && e.target.id === "box") {
+    box.style.left = moveX + "px";
+    box.style.top = moveY + "px";
+    setStorage("searchX", box.style.left);
+    setStorage("searchY", box.style.top);
   } else {
-    boxMove.value = false;
+    boxMoving.value = false;
   }
-  if (bgMove.value && e.target.id === "page") {
-    // if (page.clientWidth / 2 - moveX < 2) {
-    // }
-    // if (page.clientHeight / 2 - (moveY) < 2) {
-    // }
-    page.style.left = moveX + "px";
-    page.style.top = moveY + "px";
+  if (bgMoving.value && page.contains(e.target)) {
+    let offsetLeft = e.target.id === "page" ? 0 : e.target.offsetLeft;
+    let offsetTop = e.target.id === "page" ? 0 : e.target.offsetTop;
+    page.style.left = moveX - offsetLeft + "px";
+    page.style.top = moveY - offsetTop + "px";
     setBgX(page.style.left);
     setBgY(page.style.top);
   } else {
-    bgMove.value = false;
+    bgMoving.value = false;
   }
 };
 // 鼠标按下
 const boxDown = (e: HTMLElement): void => {
-  boxMove.value = true;
+  boxMoving.value = true;
   if (e.target.id === "box") {
     startX.value = e.offsetX;
     startY.value = e.offsetY;
@@ -157,15 +166,15 @@ const boxDown = (e: HTMLElement): void => {
 };
 // 鼠标松开
 const boxUp = (): void => {
-  boxMove.value = false;
+  boxMoving.value = false;
 };
 const bgDown = (e: HTMLElement): void => {
-  bgMove.value = true;
+  bgMoving.value = true;
   startX.value = e.offsetX - page.clientWidth / 2;
   startY.value = e.offsetY - page.clientHeight / 2;
 };
 const bgUp = (): void => {
-  bgMove.value = false;
+  bgMoving.value = false;
 };
 // 跳转书签
 const goBook = (path: string): void => {
@@ -240,6 +249,7 @@ const bgSrcChange = (e: HTMLElement): void => {
 };
 // 按左右键切换背景图的size
 const bgSizeChange = (e: HTMLElement): void => {
+  resetBg();
   let index = sizeIndex.value;
   if (e.key === "ArrowLeft") {
     index--;
@@ -294,8 +304,8 @@ const resetBg = (): void => {
 const initBox = (): void => {
   let searchX = getStorage("searchX");
   if (searchX !== null) {
-    box.value.style.left = searchX;
-    box.value.style.top = getStorage("searchY");
+    box.style.left = searchX;
+    box.style.top = getStorage("searchY");
   }
 };
 // 获取当前时间
@@ -343,11 +353,11 @@ onMounted(() => {
   position: relative;
 }
 #page {
-  height: calc(100% + 1px);
-  width: calc(100% + 1px);
+  height: 100%;
+  width: 100%;
   position: fixed;
-  left: calc(50% - 1px);
-  top: calc(50% - 1px);
+  left: 50%;
+  top: 50%;
   translate: -50% -50%;
   color: #fff;
   background-repeat: no-repeat;
@@ -364,10 +374,11 @@ onMounted(() => {
     z-index: 0;
     height: 100%;
     width: 100%;
-    min-width: 1920px;
-    min-height: 953px;
+    // min-width: 1920px;
+    // min-height: 953px;
     display: flex;
     flex-wrap: wrap;
+    overflow: hidden;
     div {
       width: 25%;
       min-width: 480px;

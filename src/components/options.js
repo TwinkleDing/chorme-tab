@@ -43,7 +43,22 @@ export const PageGridImgList = [
 	"/img/bg-grid/guo12.jpg",
 ];
 
-export const BgSizeList = ["100% 100%", "cover", "contain"];
+// export const BgSizeList = ["100% 100%", "cover", "contain"];
+
+export const BgSizeList = [
+	{
+		height: "100%",
+		width: "100%",
+	},
+	{
+		height: "auto",
+		width: "100%",
+	},
+	{
+		height: "100%",
+		width: "auto",
+	},
+];
 
 export const BookList = [
 	{
