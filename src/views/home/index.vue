@@ -1,13 +1,13 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-11-28 14:45:01
+ * @LastEditTime: 2024-11-29 09:37:15
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
 -->
 <template>
-  <div class="home" @mousemove="pageMove">
+  <div class="home" ref="home" @mousemove="pageMove">
     <div
       id="page"
       ref="page"
@@ -170,8 +170,8 @@ const boxUp = (): void => {
 };
 const bgDown = (e: HTMLElement): void => {
   bgMoving.value = true;
-  startX.value = e.offsetX - page.clientWidth / 2;
-  startY.value = e.offsetY - page.clientHeight / 2;
+  startX.value = e.offsetX;
+  startY.value = e.offsetY;
 };
 const bgUp = (): void => {
   bgMoving.value = false;
@@ -194,11 +194,11 @@ const enter = (): void => {
 };
 
 const mousewheel = (e: HTMLElement): void => {
-  if (bgMode === GRID_SCREEN || controlDown.value) return;
-  let width = page.style.width.replace(/[^0-9|.]/gi, "") || page.clientWidth;
-  let height = page.style.height.replace(/[^0-9|.]/gi, "") || page.clientHeight;
-  width = Number(width);
-  height = Number(height);
+  if (controlDown.value) return;
+  const bgWidth = page.style.width.replace(/[^0-9|.]/gi, "") || page.clientWidth;
+  const bgHeight = page.style.height.replace(/[^0-9|.]/gi, "") || page.clientHeight;
+  let width = Number(bgWidth);
+  let height = Number(bgHeight);
   if (width < 800 && e.deltaY > 0) return;
   if (e.deltaY < 0) {
     width *= 1.1;
@@ -211,7 +211,15 @@ const mousewheel = (e: HTMLElement): void => {
   page.style.height = `${parseInt(height)}px`;
   setBgW(page.style.width);
   setBgH(page.style.height);
+
+  const bgLeft = page.style.left.replace(/[^-0-9|.]/gi, "") || 0;
+  const bgTop = page.style.top.replace(/[^-0-9|.]/gi, "") || 0;
+  page.style.left = `${bgLeft - ((e.layerX / bgWidth) * width - e.layerX)}px`;
+  page.style.top = `${bgTop - ((e.layerY / bgHeight) * height - e.layerY)}px`;
+  setBgX(page.style.left);
+  setBgY(page.style.top);
 };
+
 // 切换背景图片
 const bgChange = async (type: number): void => {
   if (mouseTimer || controlDown.value) {
@@ -249,7 +257,6 @@ const bgSrcChange = (e: HTMLElement): void => {
 };
 // 按左右键切换背景图的size
 const bgSizeChange = (e: HTMLElement): void => {
-  resetBg();
   let index = sizeIndex.value;
   if (e.key === "ArrowLeft") {
     index--;
@@ -257,6 +264,8 @@ const bgSizeChange = (e: HTMLElement): void => {
       index = bgSizeList.length - 1;
     }
     sizeIndex.value = index;
+    resetBg();
+    setSizeIndex(index);
   }
   if (e.key === "ArrowRight") {
     index++;
@@ -264,16 +273,16 @@ const bgSizeChange = (e: HTMLElement): void => {
       index = 0;
     }
     sizeIndex.value = index;
+    resetBg();
+    setSizeIndex(index);
   }
-  setSizeIndex(index);
 };
 // 监听键盘事件
 const keyDown = (): void => {
   document.addEventListener("keydown", (e: HTMLElement): void => {
     if (e.key === "Control") {
       controlDown.value = true;
-    }
-    if (bgMode.value == FULL_SCREEN && e.target.localName == "body") {
+    } else if (bgMode.value == FULL_SCREEN && e.target.localName == "body") {
       bgSizeChange(e);
       bgSrcChange(e);
     }
@@ -356,9 +365,8 @@ onMounted(() => {
   height: 100%;
   width: 100%;
   position: fixed;
-  left: 50%;
-  top: 50%;
-  translate: -50% -50%;
+  left: 0;
+  top: 0;
   color: #fff;
   background-repeat: no-repeat;
   &-bg {
@@ -381,9 +389,9 @@ onMounted(() => {
     overflow: hidden;
     div {
       width: 25%;
-      min-width: 480px;
-      height: 33.33333%;
+      height: 33.334%;
       background-repeat: no-repeat;
+      background-position: 50% 50%;
     }
   }
 }

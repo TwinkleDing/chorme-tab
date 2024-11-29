@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2023-11-10 09:19:34
- * @LastEditTime: 2024-11-28 14:50:58
+ * @LastEditTime: 2024-11-29 09:37:42
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\README.md
  * @Description:
@@ -40,3 +40,6 @@
 ### v1.0.7
 
 修改背景图为 img,宫格增加了移动缩放
+
+### v1.08
+修改缩放背景时的中心点为鼠标所在

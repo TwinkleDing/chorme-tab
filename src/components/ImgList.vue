@@ -150,7 +150,7 @@ onMounted(() => {
     // 获取盒子元素
     const box = document.getElementById("bg-box");
     // 检测点击是否发生在盒子外部
-    if (!box.contains(event.target) && ex.value == false) {
+    if (box && !box.contains(event.target) && ex.value == false) {
       // 如果点击发生在盒子外部，则关闭盒子
       // box.style.display = "none"; // 或者其他关闭盒子的方法，例如隐藏或移除盒子
       ex.value = true;
