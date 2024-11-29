@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-11-29 09:37:15
+ * @LastEditTime: 2024-11-29 09:40:33
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
@@ -73,7 +73,7 @@
       </div>
     </div>
     <img-list v-if="bgMode == FULL_SCREEN" />
-    <grid />
+    <grid @set-mode="setMode" />
   </div>
 </template>
 <script setup lang="ts">
@@ -327,6 +327,9 @@ const getTime = (): void => {
 const setUnfold = (): void => {
   boxUnfold.value = !boxUnfold.value;
   setBoxUnfold(boxUnfold.value);
+};
+const setMode = (): void => {
+  resetBg();
 };
 
 watch(

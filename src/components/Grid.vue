@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-20 09:49:56
- * @LastEditTime: 2024-11-20 15:03:00
+ * @LastEditTime: 2024-11-29 09:39:22
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\components\Grid.vue
  * @Description: 
@@ -21,12 +21,14 @@ import useImgStore from "@/store/img.ts";
 import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
 
 const imgStore = useImgStore();
+const emit = defineEmits(["setMode"]);
 
 const modeActive = ref<string>(imgStore.getBgMode);
 
-const setMode = (type: string): void => {
-  modeActive.value = type;
-  imgStore.setBgMode(type);
+const setMode = (mode: string): void => {
+  modeActive.value = mode;
+  imgStore.setBgMode(mode);
+  emit("setMode", mode);
 };
 </script>
 
