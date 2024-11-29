@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-11-29 09:40:33
+ * @LastEditTime: 2024-11-29 13:29:04
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
@@ -12,8 +12,8 @@
       id="page"
       ref="page"
       @mousewheel="mousewheel"
-      @mousedown="bgDown"
-      @mouseup="bgUp"
+      @mousedown="mouseDown"
+      @mouseup="mouseUp"
       @dblclick="resetBg"
     >
       <!-- :style="
@@ -39,16 +39,15 @@
         ></div>
       </div>
     </div>
-
     <div
       id="box"
       ref="box"
       :class="['box', !boxUnfold && 'box-flod']"
-      @mousedown="boxDown"
-      @mouseup="boxUp"
+      @mousedown="mouseDown"
+      @mouseup="mouseUp"
     >
       <div class="tips">
-        <span>{{ dateTime }}</span>
+        <span>{{ currentTime }}</span>
       </div>
       <div class="search-input">
         <input
@@ -61,7 +60,7 @@
       </div>
       <div id="book" class="book">
         <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-          <img :src="item.icon" alt="" />
+          <img :src="item.icon" alt="" draggable="false" />
           <div class="book-title">{{ item.title }}</div>
         </div>
       </div>
@@ -91,9 +90,11 @@ import {
   BgSizeList,
   BookList,
 } from "@/components/Options.js";
+import useMouseEvent from "@/hooks/useMouseEvent";
 
 const router = useRouter();
 const imgStore = useImgStore();
+const { mouseDown, mouseMove, mouseUp } = useMouseEvent();
 const {
   getBgIndex,
   setBgIndex,
@@ -114,67 +115,33 @@ const {
 const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const bgSizeList = reactive(BgSizeList);
-const startX = ref<number>(0);
-const startY = ref<number>(0);
 const bgIndex = ref<number>(getBgIndex);
 const sizeIndex = ref<number>(getSizeIndex);
 const weather = ref<string>("");
 const searchValue = ref<string>("");
 const bgMode = ref<string>(getBgMode);
-const dateTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
-const boxMoving = ref<boolean>(false);
-const bgMoving = ref<boolean>(false);
+const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 const controlDown = ref<boolean>(false);
 const boxUnfold = ref<boolean>(getBoxUnfold == "true" ? true : false);
 const bookList = ref<Array[any]>(BookList);
 let mouseTimer: any = null;
 
 // 鼠标移动
-const pageMove = (e: HTMLElement): void => {
-  const moveX = e.clientX - startX.value;
-  const moveY = e.clientY - startY.value;
-  if (boxMoving.value && e.target.id === "box") {
-    box.style.left = moveX + "px";
-    box.style.top = moveY + "px";
-    setStorage("searchX", box.style.left);
-    setStorage("searchY", box.style.top);
-  } else {
-    boxMoving.value = false;
+const pageMove = (e: MouseEvent): void => {
+  if (box.contains(e.target)) {
+    const position = mouseMove(e, box);
+    if (position) {
+      setStorage("searchX", position.left);
+      setStorage("searchY", position.top);
+    }
   }
-  if (bgMoving.value && page.contains(e.target)) {
-    let offsetLeft = e.target.id === "page" ? 0 : e.target.offsetLeft;
-    let offsetTop = e.target.id === "page" ? 0 : e.target.offsetTop;
-    page.style.left = moveX - offsetLeft + "px";
-    page.style.top = moveY - offsetTop + "px";
-    setBgX(page.style.left);
-    setBgY(page.style.top);
-  } else {
-    bgMoving.value = false;
+  if (page.contains(e.target)) {
+    const position = mouseMove(e, page);
+    if (position) {
+      setBgX(position.left);
+      setBgY(position.top);
+    }
   }
-};
-// 鼠标按下
-const boxDown = (e: HTMLElement): void => {
-  boxMoving.value = true;
-  if (e.target.id === "box") {
-    startX.value = e.offsetX;
-    startY.value = e.offsetY;
-  }
-  if (e.target.id === "book") {
-    startX.value = e.offsetX + 21;
-    startY.value = e.offsetY + 101;
-  }
-};
-// 鼠标松开
-const boxUp = (): void => {
-  boxMoving.value = false;
-};
-const bgDown = (e: HTMLElement): void => {
-  bgMoving.value = true;
-  startX.value = e.offsetX;
-  startY.value = e.offsetY;
-};
-const bgUp = (): void => {
-  bgMoving.value = false;
 };
 // 跳转书签
 const goBook = (path: string): void => {
@@ -193,7 +160,7 @@ const enter = (): void => {
   }
 };
 
-const mousewheel = (e: HTMLElement): void => {
+const mousewheel = (e: WheelEvent): void => {
   if (controlDown.value) return;
   const bgWidth = page.style.width.replace(/[^0-9|.]/gi, "") || page.clientWidth;
   const bgHeight = page.style.height.replace(/[^0-9|.]/gi, "") || page.clientHeight;
@@ -221,25 +188,16 @@ const mousewheel = (e: HTMLElement): void => {
 };
 
 // 切换背景图片
-const bgChange = async (type: number): void => {
+const bgChange = (type: number): void => {
   if (mouseTimer || controlDown.value) {
     return;
   }
   mouseTimer = setTimeout(() => {
+    const maxIndex = pageBgImgList.length - 1;
     let index = bgIndex.value;
-    if (type > 0) {
-      if (index >= pageBgImgList.length - 1) {
-        index = 0;
-      } else {
-        index++;
-      }
-    } else {
-      if (index <= 0) {
-        index = pageBgImgList.length - 1;
-      } else {
-        index--;
-      }
-    }
+    index =
+      type > 0 ? (index >= maxIndex ? 0 : index + 1) : index <= 0 ? maxIndex : index - 1;
+    console.log(index);
     setBgIndex(index);
     bgIndex.value = index;
     clearTimeout(mouseTimer);
@@ -279,15 +237,19 @@ const bgSizeChange = (e: HTMLElement): void => {
 };
 // 监听键盘事件
 const keyDown = (): void => {
-  document.addEventListener("keydown", (e: HTMLElement): void => {
+  document.addEventListener("keydown", (e: KeyboardEvent): void => {
     if (e.key === "Control") {
       controlDown.value = true;
-    } else if (bgMode.value == FULL_SCREEN && e.target.localName == "body") {
+    } else if (
+      bgMode.value == FULL_SCREEN &&
+      e.target instanceof HTMLElement &&
+      e.target.localName == "body"
+    ) {
       bgSizeChange(e);
       bgSrcChange(e);
     }
   });
-  document.addEventListener("keyup", (e: HTMLElement): void => {
+  document.addEventListener("keyup", (e: KeyboardEvent): void => {
     if (e.key === "Control") {
       controlDown.value = false;
     }
@@ -320,7 +282,7 @@ const initBox = (): void => {
 // 获取当前时间
 const getTime = (): void => {
   setInterval(() => {
-    dateTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
+    currentTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
   }, 1000);
 };
 // 是否收缩
