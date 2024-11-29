@@ -1,7 +1,7 @@
 /*
  * @Author: twinkleding
  * @Date: 2024-11-29 10:56:46
- * @LastEditTime: 2024-11-29 11:28:32
+ * @LastEditTime: 2024-11-29 15:04:37
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\hooks\useMouseEvent.ts
  * @Description:
@@ -19,10 +19,10 @@ export default function () {
 		startY.value = e.offsetY;
 	}
 	function mouseMove(e: MouseEvent, target: HTMLElement) {
-		const moveX = e.clientX - startX.value;
-		const moveY = e.clientY - startY.value;
 		const mTarget = e.target as HTMLElement;
 		if (mouseMoving.value && target.contains(mTarget)) {
+			const moveX = e.clientX - startX.value;
+			const moveY = e.clientY - startY.value;
 			const offsetLeft = mTarget.id === target.id ? 0 : mTarget.offsetLeft;
 			const offsetTop = mTarget.id === target.id ? 0 : mTarget.offsetTop;
 			target.style.left = moveX - offsetLeft + "px";
@@ -36,6 +36,9 @@ export default function () {
 			return false;
 		}
 	}
+	function mouseOut() {
+		mouseMoving.value = false;
+	}
 	function mouseUp() {
 		mouseMoving.value = false;
 	}
@@ -44,5 +47,6 @@ export default function () {
 		mouseDown,
 		mouseMove,
 		mouseUp,
+		mouseOut,
 	};
 }

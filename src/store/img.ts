@@ -22,6 +22,8 @@ export default defineStore("imgId", {
 			bgH: getStorage("bgH"),
 			bgX: getStorage("bgX"),
 			bgY: getStorage("bgY"),
+			searchX: getStorage("searchX"),
+			searchY: getStorage("searchY"),
 		};
 	},
 	getters: {
@@ -48,6 +50,12 @@ export default defineStore("imgId", {
 		},
 		getBgY(): string {
 			return this.bgY;
+		},
+		getSearchX(): string {
+			return this.searchX;
+		},
+		getSearchY(): string {
+			return this.searchY;
 		},
 	},
 
@@ -84,5 +92,14 @@ export default defineStore("imgId", {
 			this.bgY = y;
 			setStorage("bgY", y);
 		},
+		setSearchX(x: string): void {
+			this.bgX = x;
+			setStorage("searchX", x);
+		},
+		setSearchY(y: string): void {
+			this.bgY = y;
+			setStorage("searchY", y);
+		},
+		
 	},
 });

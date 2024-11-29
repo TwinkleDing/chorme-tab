@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-11-29 13:29:04
+ * @LastEditTime: 2024-11-29 15:05:30
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
@@ -29,6 +29,7 @@
         :src="pageBgImgList[bgIndex]"
         :style="bgSizeList[sizeIndex]"
         draggable="false"
+        @mouseout="mouseOut"
       />
       <div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
         <div
@@ -36,6 +37,7 @@
           :style="{
             backgroundImage: `url(${item})`,
           }"
+          @mouseout="mouseOut"
         ></div>
       </div>
     </div>
@@ -45,6 +47,7 @@
       :class="['box', !boxUnfold && 'box-flod']"
       @mousedown="mouseDown"
       @mouseup="mouseUp"
+      @mouseout="mouseOut"
     >
       <div class="tips">
         <span>{{ currentTime }}</span>
@@ -94,7 +97,7 @@ import useMouseEvent from "@/hooks/useMouseEvent";
 
 const router = useRouter();
 const imgStore = useImgStore();
-const { mouseDown, mouseMove, mouseUp } = useMouseEvent();
+const { mouseDown, mouseMove, mouseUp, mouseOut } = useMouseEvent();
 const {
   getBgIndex,
   setBgIndex,
@@ -111,6 +114,10 @@ const {
   setBgX,
   getBgY,
   setBgY,
+  getSearchX,
+  setSearchX,
+  getSearchY,
+  setSearchY,
 } = imgStore;
 const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
@@ -131,11 +138,10 @@ const pageMove = (e: MouseEvent): void => {
   if (box.contains(e.target)) {
     const position = mouseMove(e, box);
     if (position) {
-      setStorage("searchX", position.left);
-      setStorage("searchY", position.top);
+      setSearchX(position.left);
+      setSearchY(position.top);
     }
-  }
-  if (page.contains(e.target)) {
+  } else if (page.contains(e.target)) {
     const position = mouseMove(e, page);
     if (position) {
       setBgX(position.left);
@@ -273,10 +279,9 @@ const resetBg = (): void => {
 };
 // 初始化背景图片,搜索框位置
 const initBox = (): void => {
-  let searchX = getStorage("searchX");
-  if (searchX !== null) {
-    box.style.left = searchX;
-    box.style.top = getStorage("searchY");
+  if (getSearchX !== null) {
+    box.style.left = getSearchX;
+    box.style.top = getSearchY;
   }
 };
 // 获取当前时间
