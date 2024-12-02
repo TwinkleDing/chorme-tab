@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-11-29 15:05:30
+ * @LastEditTime: 2024-12-02 10:48:37
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
@@ -129,7 +129,7 @@ const searchValue = ref<string>("");
 const bgMode = ref<string>(getBgMode);
 const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 const controlDown = ref<boolean>(false);
-const boxUnfold = ref<boolean>(getBoxUnfold == "true" ? true : false);
+const boxUnfold = ref<boolean>(getBoxUnfold);
 const bookList = ref<Array[any]>(BookList);
 let mouseTimer: any = null;
 
@@ -203,7 +203,6 @@ const bgChange = (type: number): void => {
     let index = bgIndex.value;
     index =
       type > 0 ? (index >= maxIndex ? 0 : index + 1) : index <= 0 ? maxIndex : index - 1;
-    console.log(index);
     setBgIndex(index);
     bgIndex.value = index;
     clearTimeout(mouseTimer);

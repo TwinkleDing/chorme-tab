@@ -1,7 +1,7 @@
 /*
  * @Author: twinkleding
  * @Date: 2024-11-15 11:00:20
- * @LastEditTime: 2024-11-26 10:30:52
+ * @LastEditTime: 2024-12-02 10:48:24
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\store\img.ts
  * @Description:
@@ -14,9 +14,9 @@ export default defineStore("imgId", {
 	// 推荐使用 完整类型推断的箭头函数
 	state: () => {
 		return {
-			bgIndex: getStorage("bgIndex") || 0,
-			sizeIndex: getStorage("sizeIndex") || 0,
-			boxUnfold: getStorage("boxUnfold") || "true",
+			bgIndex: getStorage("bgIndex") ? Number(getStorage("bgIndex")) : 0,
+			sizeIndex: getStorage("sizeIndex") ? Number(getStorage("sizeIndex")) : 0,
+			boxUnfold: getStorage("boxUnfold") === "true" ? true : false,
 			bgMode: getStorage("bgMode") || FULL_SCREEN,
 			bgW: getStorage("bgW"),
 			bgH: getStorage("bgH"),
@@ -27,13 +27,13 @@ export default defineStore("imgId", {
 		};
 	},
 	getters: {
-		getBgIndex(): string {
+		getBgIndex(): number {
 			return this.bgIndex;
 		},
-		getSizeIndex(): string {
+		getSizeIndex(): number {
 			return this.sizeIndex;
 		},
-		getBoxUnfold(): string {
+		getBoxUnfold(): boolean {
 			return this.boxUnfold;
 		},
 		getBgMode(): string {
@@ -60,11 +60,11 @@ export default defineStore("imgId", {
 	},
 
 	actions: {
-		setBgIndex(index: number | string): void {
+		setBgIndex(index: number): void {
 			this.bgIndex = index;
 			setStorage("bgIndex", index);
 		},
-		setSizeIndex(index: number | string): void {
+		setSizeIndex(index: number): void {
 			this.sizeIndex = index;
 			setStorage("sizeIndex", index);
 		},
@@ -100,6 +100,5 @@ export default defineStore("imgId", {
 			this.bgY = y;
 			setStorage("searchY", y);
 		},
-		
 	},
 });
