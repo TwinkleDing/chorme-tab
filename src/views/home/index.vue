@@ -1,7 +1,7 @@
 <!--
  * @Author: twinkleding
  * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-12-02 10:48:37
+ * @LastEditTime: 2024-12-02 19:45:52
  * @LastEditors: twinkleding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
@@ -243,7 +243,7 @@ const bgSizeChange = (e: HTMLElement): void => {
 // 监听键盘事件
 const keyDown = (): void => {
   document.addEventListener("keydown", (e: KeyboardEvent): void => {
-    if (e.key === "Control") {
+    if (["Control", "Alt", "Meta", "Shift"].includes(e.key)) {
       controlDown.value = true;
     } else if (
       bgMode.value == FULL_SCREEN &&
