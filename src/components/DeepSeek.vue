@@ -1,5 +1,5 @@
 <template>
-	<div class="ai">
+	<div id="ai" class="ai">
 		<div class="ai-content" v-loading="loading" element-loading-background="transparent">
 			<div v-for="(item, index) in chartList">
 				<div :class="['item', item.name === 'DeepSeek' ? 'left' : 'right']">
@@ -117,12 +117,24 @@ onMounted((): void => {
 			float: right;
 		}
 	}
-	:deep(.el-input__wrapper) {
-		background-color: #ffffff3a;
-		box-shadow: none;
-		color: #fff;
-		.el-input__inner {
+	:deep(.el-input) {
+		.el-input__wrapper {
+			background-color: #ffffff3a;
+			box-shadow: none;
 			color: #fff;
+			.el-input__inner {
+				color: #fff;
+				&::placeholder {
+					color: #fff;
+				}
+			}
+		}
+		.el-input-group__append {
+			box-shadow: none;
+			background-color: #ffffff3a;
+			i {
+				color: #fff;
+			}
 		}
 	}
 }

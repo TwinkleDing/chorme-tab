@@ -360,7 +360,7 @@ onMounted(() => {
 .box {
 	color: #fff;
 	width: 622px;
-	border: 1px solid #aaa;
+	border: 1px solid #ffffff3a;
 	cursor: pointer;
 	border-radius: 20px;
 	position: fixed;
@@ -388,7 +388,7 @@ onMounted(() => {
 			padding: 0 20px;
 			border-radius: 20px;
 			box-sizing: border-box;
-			background: #ffffffaa;
+			background: #ffffff3a;
 		}
 	}
 	.book {
@@ -419,7 +419,7 @@ onMounted(() => {
 		right: 5px;
 		font-size: 20px;
 		font-weight: 700;
-		color: #aaa;
+		color: #ffffff8a;
 		cursor: pointer;
 	}
 }

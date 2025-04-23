@@ -14,27 +14,47 @@ export default function () {
 	const startY = ref<number>(0);
 
 	function mouseDown(e: MouseEvent) {
+		console.log(e);
 		mouseMoving.value = true;
 		startX.value = e.offsetX;
 		startY.value = e.offsetY;
 	}
 	function mouseMove(e: MouseEvent, target: HTMLElement) {
-		const mTarget = e.target as HTMLElement;
-		if (mouseMoving.value && target.contains(mTarget)) {
-			const moveX = e.clientX - startX.value;
-			const moveY = e.clientY - startY.value;
-			const offsetLeft = mTarget.id === target.id ? 0 : mTarget.offsetLeft;
-			const offsetTop = mTarget.id === target.id ? 0 : mTarget.offsetTop;
-			target.style.left = moveX - offsetLeft + "px";
-			target.style.top = moveY - offsetTop + "px";
-			return {
-				left: target.style.left,
-				top: target.style.top,
-			};
-		} else {
+		if (!mouseMoving.value || !target.contains(e.target as HTMLElement)) {
 			mouseMoving.value = false;
-			return false;
+			return null;
 		}
+		const mTarget = e.target as HTMLElement;
+		const isDirectTarget = mTarget === target;
+		// 获取所有相关滚动容器的滚动偏移
+		const scrollOffsets = getScrollOffsets(mTarget);
+		// 计算移动距离（考虑滚动偏移）
+		const moveX = e.clientX - startX.value + scrollOffsets.scrollLeft;
+		const moveY = e.clientY - startY.value + scrollOffsets.scrollTop;
+		// 获取相对于父元素的偏移量
+		const { offsetLeft, offsetTop } = isDirectTarget ? { offsetLeft: 0, offsetTop: 0 } : mTarget;
+		// 计算新位置
+		const newLeft = moveX - offsetLeft;
+		const newTop = moveY - offsetTop;
+		// 应用新位置
+		target.style.left = `${newLeft}px`;
+		target.style.top = `${newTop}px`;
+		// 返回位置信息
+		return {
+			left: target.style.left,
+			top: target.style.top,
+		};
+	}
+	function getScrollOffsets(element: HTMLElement) {
+		let scrollLeft = 0;
+		let scrollTop = 0;
+		let current = element;
+		while (current && current !== document.body) {
+			scrollLeft += current.scrollLeft;
+			scrollTop += current.scrollTop;
+			current = current.parentElement as HTMLElement;
+		}
+		return { scrollLeft, scrollTop };
 	}
 	function mouseOut() {
 		mouseMoving.value = false;
