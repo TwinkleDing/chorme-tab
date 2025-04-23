@@ -17,7 +17,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { PictureFilled, Grid } from "@element-plus/icons-vue";
-import useImgStore from "@/store/img.ts";
+import useImgStore from "@/store/img";
 import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
 
 const imgStore = useImgStore();

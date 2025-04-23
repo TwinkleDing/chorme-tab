@@ -16,7 +16,7 @@ export default defineStore("imgId", {
 		return {
 			bgIndex: getStorage("bgIndex") ? Number(getStorage("bgIndex")) : 0,
 			sizeIndex: getStorage("sizeIndex") ? Number(getStorage("sizeIndex")) : 0,
-			boxUnfold: getStorage("boxUnfold") === "true" ? true : false,
+			boxUnfold: getStorage("boxUnfold"),
 			bgMode: getStorage("bgMode") || FULL_SCREEN,
 			bgW: getStorage("bgW"),
 			bgH: getStorage("bgH"),

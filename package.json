@@ -17,6 +17,7 @@
     "element-plus": "^2.7.6",
     "fs": "^0.0.1-security",
     "markdown": "^0.5.0",
+    "openai": "^4.95.1",
     "pinia": "^2.2.6",
     "require": "^2.4.20",
     "sass": "^1.69.5",

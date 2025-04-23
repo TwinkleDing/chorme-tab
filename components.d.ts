@@ -8,11 +8,20 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Back: typeof import('./src/components/Back.vue')['default']
+    DeepSeek: typeof import('./src/components/DeepSeek.vue')['default']
+    ElButton: typeof import('element-plus/es')['ElButton']
+    ElDivider: typeof import('element-plus/es')['ElDivider']
     ElIcon: typeof import('element-plus/es')['ElIcon']
+    ElInput: typeof import('element-plus/es')['ElInput']
+    ElOption: typeof import('element-plus/es')['ElOption']
     ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
+    ElSelect: typeof import('element-plus/es')['ElSelect']
     Grid: typeof import('./src/components/Grid.vue')['default']
     ImgList: typeof import('./src/components/ImgList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+  }
+  export interface ComponentCustomProperties {
+    vLoading: typeof import('element-plus/es')['ElLoadingDirective']
   }
 }

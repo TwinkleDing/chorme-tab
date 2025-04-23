@@ -1,9 +1,16 @@
 export const setStorage = (key: string, value: any): void => {
-	localStorage.setItem(key, value);
+	value = {
+		value: value,
+	};
+	localStorage.setItem(key, JSON.stringify(value));
 };
 
 export const getStorage = (key: string): string => {
-	return localStorage.getItem(key);
+	const value = JSON.parse(localStorage.getItem(key));
+	if (!value) {
+		return;
+	}
+	return value.value;
 };
 
 export function dateFormat(time: Date, block: any): string {
