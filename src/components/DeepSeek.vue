@@ -1,10 +1,13 @@
 <template>
 	<div id="ai" class="ai">
-		<div class="ai-content" v-loading="loading" element-loading-background="transparent">
-			<div v-for="(item, index) in chartList">
-				<div :class="['item', item.name === 'DeepSeek' ? 'left' : 'right']">
-					{{ item.content }}
-				</div>
+		<div ref="aiContent" class="ai-content">
+			<div
+				v-loading="loading && item.name === 'DeepSeek' && index === chartList.length - 1"
+				v-for="(item, index) in chartList"
+				:class="['item', item.name === 'DeepSeek' ? 'left' : 'right']"
+				element-loading-background="#0000003a"
+			>
+				{{ item.content }}
 			</div>
 		</div>
 		<div class="ai-input">
@@ -29,6 +32,7 @@ const searchValue = ref<string>("");
 const chartList = ref<Array<{ name: string; content: string }>>(getChartList);
 const openai = ref(null);
 const loading = ref(false);
+const aiContent = ref<HTMLElement>();
 let timer;
 
 const init = (): void => {
@@ -44,8 +48,13 @@ const search = (): void => {
 		name: "user",
 		content: searchValue.value,
 	});
+	chartList.value.push({
+		name: "DeepSeek",
+		content: "",
+	});
 	setChartList([...chartList.value]);
-	aiAnswer();
+	scrollBottom();
+	// aiAnswer();
 };
 const aiAnswer = async (): Promise<void> => {
 	try {
@@ -59,29 +68,38 @@ const aiAnswer = async (): Promise<void> => {
 		});
 		searchValue.value = "";
 
-		console.log(completion);
 		if (completion.choices[0].message.content) {
 			loading.value = false;
 			clearTimeout(timer);
 			timer = null;
-			chartList.value.push({
+			chartList.value[chartList.value.length - 1] = {
 				name: "DeepSeek",
 				content: completion.choices[0].message.content,
-			});
+			};
 			setChartList([...chartList.value]);
+			scrollBottom();
 		}
 	} catch (e) {
 		chartList.value.push({
 			name: "DeepSeek",
 			content: e,
 		});
+		scrollBottom();
 		loading.value = false;
 		clearTimeout(timer);
 		timer = null;
 	}
 };
+const scrollBottom = (): void => {
+	setTimeout(() => {
+		if (aiContent.value) {
+			aiContent.value.scrollTop = aiContent.value.scrollHeight;
+		}
+	}, 100);
+};
 onMounted((): void => {
 	init();
+	scrollBottom();
 });
 </script>
 
@@ -99,7 +117,7 @@ onMounted((): void => {
 	}
 	.item {
 		max-width: 80%;
-		background-color: #ffffff3a;
+		background-color: #0000003a;
 		border-radius: 8px;
 		padding: 0 12px;
 		clear: both;
@@ -109,19 +127,23 @@ onMounted((): void => {
 		&.left,
 		&.right {
 			margin-bottom: 12px;
+			box-shadow: 0 0 10px #0000003a;
 		}
 		&.left {
 			float: left;
+			width: 80%;
 		}
 		&.right {
 			float: right;
 		}
 	}
 	:deep(.el-input) {
+		position: initial;
 		.el-input__wrapper {
-			background-color: #ffffff3a;
+			background-color: #0000003a;
 			box-shadow: none;
 			color: #fff;
+			transform: none;
 			.el-input__inner {
 				color: #fff;
 				&::placeholder {
@@ -131,7 +153,7 @@ onMounted((): void => {
 		}
 		.el-input-group__append {
 			box-shadow: none;
-			background-color: #ffffff3a;
+			background-color: #0000003a;
 			i {
 				color: #fff;
 			}

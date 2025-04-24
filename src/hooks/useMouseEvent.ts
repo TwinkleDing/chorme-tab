@@ -14,7 +14,6 @@ export default function () {
 	const startY = ref<number>(0);
 
 	function mouseDown(e: MouseEvent) {
-		console.log(e);
 		mouseMoving.value = true;
 		startX.value = e.offsetX;
 		startY.value = e.offsetY;
@@ -48,7 +47,7 @@ export default function () {
 	function getScrollOffsets(element: HTMLElement) {
 		let scrollLeft = 0;
 		let scrollTop = 0;
-		let current = element;
+		let current = element !== document.body && (element.parentElement as HTMLElement);
 		while (current && current !== document.body) {
 			scrollLeft += current.scrollLeft;
 			scrollTop += current.scrollTop;

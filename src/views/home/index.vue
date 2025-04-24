@@ -360,7 +360,6 @@ onMounted(() => {
 .box {
 	color: #fff;
 	width: 622px;
-	border: 1px solid #ffffff3a;
 	cursor: pointer;
 	border-radius: 20px;
 	position: fixed;
@@ -369,6 +368,7 @@ onMounted(() => {
 	user-select: none;
 	z-index: 2;
 	padding: 0 20px;
+	box-shadow: 0 0 10px #0000003a;
 
 	.time {
 		display: inline-block;
@@ -388,7 +388,11 @@ onMounted(() => {
 			padding: 0 20px;
 			border-radius: 20px;
 			box-sizing: border-box;
-			background: #ffffff3a;
+			background: #0000003a;
+			color: #fff;
+			&::placeholder {
+				color: #fff;
+			}
 		}
 	}
 	.book {
