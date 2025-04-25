@@ -5,7 +5,7 @@
 				v-loading="loading && item.name === 'DeepSeek' && index === chartList.length - 1"
 				v-for="(item, index) in chartList"
 				:class="['item', item.name === 'DeepSeek' ? 'left' : 'right']"
-				element-loading-background="#0000003a"
+				element-loading-background="#00000033"
 			>
 				{{ item.content }}
 			</div>
@@ -43,7 +43,7 @@ const init = (): void => {
 	});
 };
 const search = (): void => {
-	if (loading.value) return;
+	if (loading.value || !searchValue.value) return;
 	chartList.value.push({
 		name: "user",
 		content: searchValue.value,
@@ -109,7 +109,7 @@ onMounted((): void => {
 	&-content {
 		height: 500px;
 		overflow: auto;
-		margin-bottom: 24px;
+		margin-bottom: 12px;
 	}
 	&-input {
 		height: 40px;
@@ -117,18 +117,15 @@ onMounted((): void => {
 	}
 	.item {
 		max-width: 80%;
-		background-color: #0000003a;
+		// background-color: #00000033;
 		border-radius: 8px;
 		padding: 0 12px;
 		clear: both;
 
 		word-wrap: break-word;
 		white-space: break-spaces;
-		&.left,
-		&.right {
-			margin-bottom: 12px;
-			box-shadow: 0 0 10px #0000003a;
-		}
+		margin: 0 12px 12px;
+		box-shadow: 0 0 10px #00000033;
 		&.left {
 			float: left;
 			width: 80%;
@@ -140,8 +137,10 @@ onMounted((): void => {
 	:deep(.el-input) {
 		position: initial;
 		.el-input__wrapper {
-			background-color: #0000003a;
-			box-shadow: none;
+			// background-color: #00000033;
+			background-color: transparent;
+			box-shadow: 0 0 10px #00000033;
+
 			color: #fff;
 			transform: none;
 			.el-input__inner {
@@ -153,7 +152,9 @@ onMounted((): void => {
 		}
 		.el-input-group__append {
 			box-shadow: none;
-			background-color: #0000003a;
+			// background-color: #00000033;
+			background-color: transparent;
+			box-shadow: 0 0 10px #00000033;
 			i {
 				color: #fff;
 			}

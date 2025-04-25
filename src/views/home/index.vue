@@ -12,8 +12,8 @@
 			id="page"
 			ref="page"
 			@mousewheel="mousewheel"
-			@mousedown="mouseDown"
-			@mouseup="mouseUp"
+			@mousedown="domMouseDown"
+			@mouseup="domMouseUp"
 			@dblclick="resetBg"
 		>
 			<img
@@ -21,7 +21,7 @@
 				:src="pageBgImgList[bgIndex]"
 				:style="bgSizeList[sizeIndex]"
 				draggable="false"
-				@mouseout="mouseOut"
+				@mouseout="domMouseOut"
 			/>
 			<div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
 				<div
@@ -29,7 +29,7 @@
 					:style="{
 						backgroundImage: `url(${item})`,
 					}"
-					@mouseout="mouseOut"
+					@mouseout="domMouseOut"
 				></div>
 			</div>
 		</div>
@@ -37,9 +37,9 @@
 			id="box"
 			ref="box"
 			:class="['box', !boxUnfold && 'box-fold']"
-			@mousedown="mouseDown"
-			@mouseup="mouseUp"
-			@mouseout="mouseOut"
+			@mousedown="domMouseDown"
+			@mouseup="domMouseUp"
+			@mouseout="domMouseOut"
 		>
 			<div class="time">
 				<span>{{ currentTime }}</span>
@@ -89,6 +89,8 @@ import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
 import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import { PageBgImgList, PageGridImgList, BgSizeList, BookList } from "@/components/Options.js";
 
+const BgMinWidth = 800;
+const MouseWheelRatio = 1.1;
 const router = useRouter();
 const imgStore = useImgStore();
 const { mouseDown, mouseMove, mouseUp, mouseOut } = useMouseEvent();
@@ -128,6 +130,37 @@ const boxUnfold = ref<boolean>(getBoxUnfold);
 const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
+let mouseDownTimer: any = null;
+
+const domMouseDown = (e: MouseEvent): void => {
+	mouseDown(e);
+	if (box.value?.contains(e.target as Node)) {
+		mouseDownTimer = setTimeout(() => {
+			setBoxBgColor("#00000080");
+		}, 100);
+	}
+};
+const domMouseUp = (e: MouseEvent): void => {
+	mouseUp();
+	if (mouseDownTimer) {
+		clearTimeout(mouseDownTimer); // 清除定时器
+		mouseDownTimer = null;
+	}
+	if (box.value?.contains(e.target as Node)) {
+		setBoxBgColor("transparent");
+	}
+};
+const domMouseOut = (e: MouseEvent): void => {
+	mouseOut();
+	if (box.value?.contains(e.target as Node)) {
+		setBoxBgColor("transparent");
+	}
+};
+const setBoxBgColor = (color: string): void => {
+	if (box.value) {
+		box.value.style.backgroundColor = color;
+	}
+};
 
 // 鼠标移动
 const pageMove = (e: MouseEvent): void => {
@@ -161,7 +194,7 @@ const enter = async (): Promise<void> => {
 		searchValue.value = "";
 	}
 };
-
+// 鼠标滚轮缩放背景图
 const mousewheel = (e: WheelEvent): void => {
 	if (controlDown.value) return;
 	const reg1 = /[^0-9|.]/gi;
@@ -170,13 +203,13 @@ const mousewheel = (e: WheelEvent): void => {
 	const bgHeight = Number(page.value.style.height.replace(reg1, "")) || page.value.clientHeight;
 	let width = Number(bgWidth);
 	let height = Number(bgHeight);
-	if (width < 800 && e.deltaY > 0) return;
+	if (width < BgMinWidth && e.deltaY > 0) return;
 	if (e.deltaY < 0) {
-		width *= 1.1;
-		height *= 1.1;
+		width *= MouseWheelRatio;
+		height *= MouseWheelRatio;
 	} else {
-		width /= 1.1;
-		height /= 1.1;
+		width /= MouseWheelRatio;
+		height /= MouseWheelRatio;
 	}
 	page.value.style.width = width + "px";
 	page.value.style.height = height + "px";
@@ -190,7 +223,6 @@ const mousewheel = (e: WheelEvent): void => {
 	setBgX(page.value.style.left);
 	setBgY(page.value.style.top);
 };
-
 // 切换背景图片
 const bgChange = (type: number): void => {
 	if (mouseTimer || controlDown.value) {
@@ -215,7 +247,7 @@ const bgSrcChange = (e: KeyboardEvent): void => {
 		bgChange(1);
 	}
 };
-// 按左右键切换背景图的size
+// 按左右键切换背景图的契合度
 const bgSizeChange = (e: KeyboardEvent): void => {
 	let index = sizeIndex.value;
 	if (e.key === "ArrowLeft") {
@@ -253,12 +285,14 @@ const keyDown = (): void => {
 		}
 	});
 };
+// 初始化背景图
 const initBg = (): void => {
 	getBgW && (page.value.style.width = getBgW);
 	getBgH && (page.value.style.height = getBgH);
 	getBgX && (page.value.style.left = getBgX);
 	getBgY && (page.value.style.top = getBgY);
 };
+// 重置背景图位置和大小
 const resetBg = (): void => {
 	page.value.style.width = "";
 	page.value.style.height = "";
@@ -269,7 +303,7 @@ const resetBg = (): void => {
 	setBgX("");
 	setBgY("");
 };
-// 初始化背景图片,搜索框位置
+// 初始化搜索框位置
 const initBox = (): void => {
 	if (getSearchX !== null) {
 		box.value.style.left = getSearchX;
@@ -282,11 +316,12 @@ const getTime = (): void => {
 		currentTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
 	}, 1000);
 };
-// 是否收缩
+// 设置缩放
 const setUnfold = (): void => {
 	boxUnfold.value = !boxUnfold.value;
 	setBoxUnfold(boxUnfold.value);
 };
+// 切换模式，单图还是栅格图
 const setMode = (): void => {
 	resetBg();
 };
@@ -368,7 +403,7 @@ onMounted(() => {
 	user-select: none;
 	z-index: 2;
 	padding: 0 20px;
-	box-shadow: 0 0 10px #0000003a;
+	box-shadow: 0 0 10px #00000080;
 
 	.time {
 		display: inline-block;
@@ -388,7 +423,9 @@ onMounted(() => {
 			padding: 0 20px;
 			border-radius: 20px;
 			box-sizing: border-box;
-			background: #0000003a;
+			// background: #00000033;
+			background-color: transparent;
+			box-shadow: 0 0 10px #00000033;
 			color: #fff;
 			&::placeholder {
 				color: #fff;
