@@ -136,7 +136,7 @@ const domMouseDown = (e: MouseEvent): void => {
 	mouseDown(e);
 	if (box.value?.contains(e.target as Node)) {
 		mouseDownTimer = setTimeout(() => {
-			setBoxBgColor("#00000080");
+			setBoxBgColor("#00000033");
 		}, 100);
 	}
 };

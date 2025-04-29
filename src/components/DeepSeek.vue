@@ -54,7 +54,7 @@ const search = (): void => {
 	});
 	setChartList([...chartList.value]);
 	scrollBottom();
-	// aiAnswer();
+	aiAnswer();
 };
 const aiAnswer = async (): Promise<void> => {
 	try {
@@ -129,6 +129,7 @@ onMounted((): void => {
 		&.left {
 			float: left;
 			width: 80%;
+			user-select: all;
 		}
 		&.right {
 			float: right;
