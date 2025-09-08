@@ -60,6 +60,9 @@ export const BgSizeList = [
 	},
 ];
 
+import StoryIcon from "@/assets/image/story-icon.png";
+import DrawIcon from "@/assets/image/draw-icon.jpg";
+
 export const BookList = [
 	{
 		title: "百度",
@@ -76,14 +79,14 @@ export const BookList = [
 		href: "https://chat.deepseek.com/",
 		icon: "https://chat.deepseek.com/favicon.svg",
 	},
-	// {
-	// 	title: "我的小说",
-	// 	href: "/story",
-	// 	icon: "",
-	// },
-	// {
-	// 	title: "你画我猜",
-	// 	href: "/draw",
-	// 	icon: "",
-	// },
+	{
+		title: "我的小说",
+		href: "/story",
+		icon: StoryIcon,
+	},
+	{
+		title: "你画我猜",
+		href: "/draw",
+		icon: DrawIcon,
+	},
 ];
