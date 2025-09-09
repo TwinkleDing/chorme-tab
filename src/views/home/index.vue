@@ -43,9 +43,9 @@
 		>
 			<div class="time">
 				<span>{{ currentTime }}</span>
-				<el-divider direction="vertical" />
+				<!-- <el-divider direction="vertical" />
 				<el-button v-if="!isAI" link type="primary" @click="isAI = true">使用DeepSeek</el-button>
-				<el-button v-if="isAI" link type="primary" @click="isAI = false">换回普通模式</el-button>
+				<el-button v-if="isAI" link type="primary" @click="isAI = false">换回普通模式</el-button> -->
 			</div>
 			<deep-seek v-show="isAI" />
 			<div v-show="!isAI">
@@ -394,7 +394,7 @@ onMounted(() => {
 }
 .box {
 	color: #fff;
-	width: 622px;
+	width: 640px;
 	cursor: pointer;
 	border-radius: 20px;
 	position: fixed;
