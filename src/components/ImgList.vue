@@ -165,12 +165,14 @@ onMounted(() => {
 	max-width: calc(100% - 12px);
 	user-select: none;
 }
+
 .img-box {
 	display: flex;
 	border: 1px solid #aaa;
 	border-radius: 0 10px 10px 0;
 	overflow: hidden;
 	max-width: 100%;
+
 	.ex {
 		width: 24px;
 		height: 100%;
@@ -180,6 +182,7 @@ onMounted(() => {
 		background: #cccccc88;
 		color: #fff;
 	}
+
 	.scroll-box {
 		height: 100%;
 		padding: 0 6px;
@@ -188,15 +191,18 @@ onMounted(() => {
 
 		.img-list {
 			display: flex;
+
 			.img {
 				cursor: pointer;
 				height: 96px;
 				border-radius: 2px;
 				padding: 2px;
 				margin: 2px;
+
 				&.active {
 					background: #fff;
 				}
+
 				img {
 					height: 92px;
 					width: 138px;

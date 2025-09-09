@@ -8,39 +8,18 @@
 -->
 <template>
 	<div class="home" ref="home" @mousemove="pageMove">
-		<div
-			id="page"
-			ref="page"
-			@mousewheel="mousewheel"
-			@mousedown="domMouseDown"
-			@mouseup="domMouseUp"
-			@dblclick="resetBg"
-		>
-			<img
-				v-if="bgMode === FULL_SCREEN"
-				:src="pageBgImgList[bgIndex]"
-				:style="bgSizeList[sizeIndex]"
-				draggable="false"
-				@mouseout="domMouseOut"
-			/>
+		<div id="page" ref="page" @mousewheel="mousewheel" @mousedown="domMouseDown" @mouseup="domMouseUp"
+			@dblclick="resetBg">
+			<img v-if="bgMode === FULL_SCREEN" :src="pageBgImgList[bgIndex]" :style="bgSizeList[sizeIndex]"
+				draggable="false" @mouseout="domMouseOut" />
 			<div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
-				<div
-					v-for="item in pageGridImgList"
-					:style="{
-						backgroundImage: `url(${item})`,
-					}"
-					@mouseout="domMouseOut"
-				></div>
+				<div v-for="item in pageGridImgList" :style="{
+					backgroundImage: `url(${item})`,
+				}" @mouseout="domMouseOut"></div>
 			</div>
 		</div>
-		<div
-			id="box"
-			ref="box"
-			:class="['box', !boxUnfold && 'box-fold']"
-			@mousedown="domMouseDown"
-			@mouseup="domMouseUp"
-			@mouseout="domMouseOut"
-		>
+		<div id="box" ref="box" :class="['box', !boxUnfold && 'box-fold']" @mousedown="domMouseDown"
+			@mouseup="domMouseUp" @mouseout="domMouseOut">
 			<div class="time">
 				<span>{{ currentTime }}</span>
 				<!-- <el-divider direction="vertical" />
@@ -50,13 +29,8 @@
 			<deep-seek v-show="isAI" />
 			<div v-show="!isAI">
 				<div class="search-input">
-					<input
-						v-model="searchValue"
-						ref="input"
-						placeholder="搜索..."
-						type="text"
-						@keyup.enter.native="enter"
-					/>
+					<input v-model="searchValue" ref="input" placeholder="搜索..." type="text"
+						@keyup.enter.native="enter" />
 				</div>
 				<div id="book" class="book">
 					<div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
@@ -358,6 +332,7 @@ onMounted(() => {
 	width: 100%;
 	position: relative;
 }
+
 #page {
 	height: 100%;
 	width: 100%;
@@ -366,12 +341,14 @@ onMounted(() => {
 	top: 0;
 	color: #fff;
 	background-repeat: no-repeat;
+
 	&-bg {
 		position: absolute;
 		left: 0;
 		top: 0;
 		z-index: 0;
 	}
+
 	&-bg-box {
 		position: absolute;
 		left: 0;
@@ -384,6 +361,7 @@ onMounted(() => {
 		display: flex;
 		flex-wrap: wrap;
 		overflow: hidden;
+
 		div {
 			width: 25%;
 			height: 33.334%;
@@ -392,6 +370,7 @@ onMounted(() => {
 		}
 	}
 }
+
 .box {
 	color: #fff;
 	width: 640px;
@@ -410,10 +389,12 @@ onMounted(() => {
 		height: 40px;
 		line-height: 40px;
 	}
+
 	.search-input {
 		width: 100%;
 		height: 40px;
 		margin-bottom: 20px;
+
 		input {
 			width: 100%;
 			height: 100%;
@@ -427,26 +408,31 @@ onMounted(() => {
 			background-color: transparent;
 			box-shadow: 0 0 10px #00000033;
 			color: #fff;
+
 			&::placeholder {
 				color: #fff;
 			}
 		}
 	}
+
 	.book {
 		display: inline-block;
 		height: 280px;
 		margin-bottom: 20px;
+
 		&-item {
 			display: inline-block;
 			text-align: center;
 			border-radius: 10%;
 			margin: 0 20px 15px;
+
 			img {
 				height: 80px;
 				width: 80px;
 				margin: 10px 0;
 			}
 		}
+
 		&-title {
 			white-space: nowrap;
 			overflow: hidden;
@@ -454,6 +440,7 @@ onMounted(() => {
 			font-size: 16px;
 		}
 	}
+
 	.boxUnfold {
 		position: absolute;
 		bottom: 0;
@@ -464,19 +451,23 @@ onMounted(() => {
 		cursor: pointer;
 	}
 }
+
 .box-fold {
 	.book {
 		height: 20px;
 		margin-bottom: 0;
 		position: relative;
 		top: -8px;
+
 		.book-item {
 			margin: 0 10px 0 0;
+
 			img {
 				height: 20px;
 				width: 20px;
 				margin: 0;
 			}
+
 			.book-title {
 				display: none;
 			}

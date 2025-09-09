@@ -92,7 +92,6 @@ const lineWidth = ref(widthList[0]);
 const currentBrushIndex = ref(0);
 const isDrawing = ref(false);
 const showBgImg = ref(true);
-const isEraser = ref(false);
 const drawHistory = ref([]);
 const drawStep = ref(-1);
 const drawList = ref([]);
