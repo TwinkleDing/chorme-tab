@@ -7,7 +7,7 @@
  * @Description: 
 -->
 <template>
-  <div @click="back">返回首页</div>
+	<div @click="back" style="cursor: pointer">返回首页</div>
 </template>
 <script setup>
 import { useRouter } from "vue-router";
@@ -15,8 +15,6 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const back = () => {
-  router.push("/");
+	router.push("/");
 };
 </script>
-
-<style lang="scss" scoped></style>

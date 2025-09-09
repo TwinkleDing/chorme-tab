@@ -8,6 +8,7 @@
 -->
 <template>
 	<div ref="draw" id="draw">
+		<back-page class="back" />
 		<div class="bg">
 			<img v-if="showBgImg" :src="pageBgImgList[bgIndex]" :style="bgSizeList[sizeIndex]" draggable="false" />
 		</div>
@@ -31,21 +32,29 @@
 					<span :style="{ width: width + 'px', height: width + 'px', backgroundColor: color }"></span>
 				</div>
 			</div>
-			<!-- <div class="eraser-picker" @click="eraserClick">
-				<el-icon :color="isEraser && color"><EditPen /></el-icon>
-			</div> -->
 			<div class="step-picker">
 				<el-button :disabled="drawStep < 0" :icon="Back" @click="previousStep" circle />
 				<el-button :disabled="drawStep == drawHistory.length - 1" :icon="Right" @click="nextStep" circle />
 			</div>
+			<div class="brush-picker">
+				<div
+					v-for="(name, index) in brushNames"
+					@click="brushChange(index)"
+					:class="{ active: currentBrushIndex === index }"
+				>
+					<span>{{ name }}</span>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
-<script setup lang="ts">
+<script setup>
 import { ref, reactive, onMounted } from "vue";
-import { Back, Right, View, Hide, EditPen } from "@element-plus/icons-vue";
-import useImgStore from "@/store/img";
+import { Back, Right, View, Hide } from "@element-plus/icons-vue";
 import { PageBgImgList, BgSizeList } from "@/components/Options.js";
+import BackPage from "@/components/Back.vue";
+import useImgStore from "@/store/img";
+
 const imgStore = useImgStore();
 const predefineColors = [
 	"#ff4500",
@@ -64,16 +73,23 @@ const predefineColors = [
 	"#c7158577",
 ];
 const widthList = [2, 4, 6, 8, 10];
+const brushTypes = [
+	{ name: "round", cap: "round", join: "round" },
+	{ name: "square", cap: "square", join: "bevel" },
+	{ name: "butt", cap: "butt", join: "miter" },
+];
+const brushNames = ["圆头", "方头", "平头"];
 
 const { getBgIndex, getSizeIndex } = imgStore;
 const pageBgImgList = reactive(PageBgImgList);
 const bgSizeList = reactive(BgSizeList);
-const bgIndex = ref<number>(getBgIndex);
-const sizeIndex = ref<number>(getSizeIndex);
-const draw = ref<HTMLCanvasElement | null>(null);
-const canvas = ref<HTMLCanvasElement | null>(null);
+const bgIndex = ref(getBgIndex);
+const sizeIndex = ref(getSizeIndex);
+const draw = ref(null);
+const canvas = ref(null);
 const color = ref(predefineColors[0]);
 const lineWidth = ref(widthList[0]);
+const currentBrushIndex = ref(0);
 const isDrawing = ref(false);
 const showBgImg = ref(true);
 const isEraser = ref(false);
@@ -82,25 +98,38 @@ const drawStep = ref(-1);
 const drawList = ref([]);
 
 const initCanvas = () => {
-	canvas.value!.height = draw.value!.clientHeight;
-	canvas.value!.width = draw.value!.clientWidth;
-	const ctx = canvas.value!.getContext("2d");
+	canvas.value.height = draw.value.clientHeight;
+	canvas.value.width = draw.value.clientWidth;
+	const ctx = canvas.value.getContext("2d");
 	ctx.strokeStyle = color.value;
 	ctx.fillStyle = "transparent";
 	ctx.lineWidth = lineWidth.value;
+	updateBrushStyle();
+};
+
+const updateBrushStyle = () => {
+	const ctx = canvas.value.getContext("2d");
+	const brush = brushTypes[currentBrushIndex.value];
+	ctx.lineCap = brush.cap;
+	ctx.lineJoin = brush.join;
+};
+
+const brushChange = (index) => {
+	currentBrushIndex.value = index;
+	updateBrushStyle();
 };
 const mousedown = (e) => {
 	isDrawing.value = true;
 	drawList.value = [e.offsetX, e.offsetY];
-	const ctx = canvas.value!.getContext("2d");
+	const ctx = canvas.value.getContext("2d");
 	ctx.beginPath();
 	ctx.moveTo(e.offsetX, e.offsetY);
-	canvas.value!.addEventListener("mousemove", mouseover);
+	canvas.value.addEventListener("mousemove", mouseover);
 };
 const mouseover = (e) => {
 	if (!isDrawing.value) return;
 	drawList.value.push([e.offsetX, e.offsetY]);
-	const ctx = canvas.value!.getContext("2d");
+	const ctx = canvas.value.getContext("2d");
 	ctx.lineTo(e.offsetX, e.offsetY);
 	ctx.stroke();
 };
@@ -111,10 +140,11 @@ const mouseup = (e) => {
 		{
 			lineWidth: lineWidth.value,
 			color: color.value,
+			brushType: currentBrushIndex.value,
 			step: drawList.value,
 		},
 	];
-	canvas.value!.removeEventListener("mousemove", mouseover);
+	canvas.value.removeEventListener("mousemove", mouseover);
 	isDrawing.value = false;
 };
 
@@ -126,20 +156,17 @@ const showup = () => {
 };
 
 const colorChange = () => {
-	const ctx = canvas.value!.getContext("2d");
+	const ctx = canvas.value.getContext("2d");
 	ctx.strokeStyle = color.value;
 };
 const lineChange = (width) => {
 	lineWidth.value = width;
-	const ctx = canvas.value!.getContext("2d");
+	const ctx = canvas.value.getContext("2d");
 	ctx.lineWidth = lineWidth.value;
 };
-const eraserClick = () => {
-	isEraser.value = !isEraser.value;
-};
 const previousStep = () => {
-	const ctx = canvas.value!.getContext("2d");
-	ctx.clearRect(0, 0, canvas.value!.width, canvas.value!.height);
+	const ctx = canvas.value.getContext("2d");
+	ctx.clearRect(0, 0, canvas.value.width, canvas.value.height);
 	if (drawStep.value > 0) {
 		drawStep.value--;
 		const list = drawHistory.value.filter((item, index) => index <= drawStep.value);
@@ -156,13 +183,18 @@ const nextStep = () => {
 	}
 };
 const stepDraw = (list) => {
-	const ctx = canvas.value!.getContext("2d");
+	const ctx = canvas.value.getContext("2d");
 	list.forEach((item) => {
 		ctx.beginPath();
 		ctx.moveTo(item.step[0][0], item.step[0][1]);
 		ctx.lineWidth = item.lineWidth;
 		ctx.strokeStyle = item.color;
 		ctx.fillStyle = "transparent";
+		if (item.brushType !== undefined) {
+			const brush = brushTypes[item.brushType];
+			ctx.lineCap = brush.cap;
+			ctx.lineJoin = brush.join;
+		}
 		item.step.forEach((point) => {
 			ctx.lineTo(point[0], point[1]);
 			ctx.stroke();
@@ -180,6 +212,12 @@ onMounted(() => {
 	height: 100%;
 	width: 100%;
 	user-select: none;
+	.back {
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 2;
+	}
 	.bg {
 		position: absolute;
 		left: 0;
@@ -227,6 +265,21 @@ onMounted(() => {
 	.eraser-picker {
 		color: #000;
 		line-height: 32px;
+	}
+	.brush-picker {
+		display: flex;
+		align-items: center;
+		height: 32px;
+		div {
+			padding: 0 8px;
+			margin-right: 8px;
+			line-height: 28px;
+			cursor: pointer;
+			border-radius: 4px;
+			&.active {
+				background-color: rgba(144, 238, 144, 0.5);
+			}
+		}
 	}
 }
 </style>

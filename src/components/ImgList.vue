@@ -48,9 +48,9 @@ const mousewheel = (e) => {
 	e.preventDefault();
 	const content = document.getElementsByClassName("el-scrollbar__wrap")[0];
 	if (e.deltaY > 0) {
-		content.scrollLeft += imgWidth;
+		content.scrollLeft += imgWidth + 4;
 	} else {
-		content.scrollLeft -= imgWidth;
+		content.scrollLeft -= imgWidth + 4;
 	}
 };
 
