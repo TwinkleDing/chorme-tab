@@ -8,7 +8,6 @@
 -->
 <template>
 	<div ref="draw" id="draw">
-		<back-page class="back" />
 		<div class="bg">
 			<img v-if="showBgImg" :src="pageBgImgList[bgIndex]" :style="bgSizeList[sizeIndex]" draggable="false" />
 		</div>
@@ -52,7 +51,6 @@
 import { ref, reactive, onMounted } from "vue";
 import { Back, Right, View, Hide } from "@element-plus/icons-vue";
 import { PageBgImgList, BgSizeList } from "@/components/Options.js";
-import BackPage from "@/components/Back.vue";
 import useImgStore from "@/store/img";
 
 const imgStore = useImgStore();
@@ -211,12 +209,6 @@ onMounted(() => {
 	height: 100%;
 	width: 100%;
 	user-select: none;
-	.back {
-		position: absolute;
-		left: 0;
-		top: 0;
-		z-index: 2;
-	}
 	.bg {
 		position: absolute;
 		left: 0;
@@ -224,7 +216,7 @@ onMounted(() => {
 		z-index: 0;
 	}
 	#canvas {
-		cursor: crosshair;
+		cursor: url('@/assets/image/pen.png') 0 32, auto;
 		position: absolute;
 		left: 0;
 		top: 0;

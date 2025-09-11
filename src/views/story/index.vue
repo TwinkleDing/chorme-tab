@@ -8,7 +8,6 @@
 -->
 <template>
   <div class="story">
-    <back />
     <el-scrollbar>
       <div class="text">
         <p v-for="item in text.split('\n')">
@@ -22,7 +21,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
-import Back from "@/components/Back.vue";
 
 const text = ref("");
 

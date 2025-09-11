@@ -157,7 +157,8 @@ const goBook = (path: string): void => {
 	if (path.startsWith("http://") || path.startsWith("https://")) {
 		window.open(path);
 	} else {
-		router.push(path);
+		console.log()
+		window.open(window.location.href + path);
 	}
 };
 const enter = async (): Promise<void> => {

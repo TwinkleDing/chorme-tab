@@ -62,6 +62,7 @@ export const BgSizeList = [
 
 import StoryIcon from "@/assets/image/story-icon.png";
 import DrawIcon from "@/assets/image/draw-icon.jpg";
+import FlySheep from "@/assets/image/flysheep.png";
 
 export const BookList = [
 	{
@@ -75,18 +76,24 @@ export const BookList = [
 		icon: "https://shared-https.ydstatic.com/images/favicon.ico",
 	},
 	{
-		title: "deepseek",
+		title: "deepSeek",
 		href: "https://chat.deepseek.com/",
 		icon: "https://chat.deepseek.com/favicon.svg",
 	},
 	{
 		title: "我的小说",
-		href: "/story",
+		href: "story",
 		icon: StoryIcon,
 	},
 	{
 		title: "你画我猜",
-		href: "/draw",
+		href: "draw",
 		icon: DrawIcon,
+	},
+	{
+		title: "游戏避难所",
+		href: "https://www.flysheep6.com",
+		icon: FlySheep,
+		desc: "https://sway.cloud.microsoft/ruijH7BYH9RwA9HG?ref=Link",
 	},
 ];
