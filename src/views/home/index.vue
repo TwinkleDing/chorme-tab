@@ -8,18 +8,39 @@
 -->
 <template>
 	<div class="home" ref="home" @mousemove="pageMove">
-		<div id="page" ref="page" @mousewheel="mousewheel" @mousedown="domMouseDown" @mouseup="domMouseUp"
-			@dblclick="resetBg">
-			<img v-if="bgMode === FULL_SCREEN" :src="pageBgImgList[bgIndex]" :style="bgSizeList[sizeIndex]"
-				draggable="false" @mouseout="domMouseOut" />
+		<div
+			id="page"
+			ref="page"
+			@mousewheel="mousewheel"
+			@mousedown="domMouseDown"
+			@mouseup="domMouseUp"
+			@dblclick="resetBg"
+		>
+			<img
+				v-if="bgMode === FULL_SCREEN"
+				:src="pageBgImgList[bgIndex]"
+				:style="bgSizeList[sizeIndex]"
+				draggable="false"
+				@mouseout="domMouseOut"
+			/>
 			<div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
-				<div v-for="item in pageGridImgList" :style="{
-					backgroundImage: `url(${item})`,
-				}" @mouseout="domMouseOut"></div>
+				<div
+					v-for="item in pageGridImgList"
+					:style="{
+						backgroundImage: `url(${item})`,
+					}"
+					@mouseout="domMouseOut"
+				></div>
 			</div>
 		</div>
-		<div id="box" ref="box" :class="['box', !boxUnfold && 'box-fold']" @mousedown="domMouseDown"
-			@mouseup="domMouseUp" @mouseout="domMouseOut">
+		<div
+			id="box"
+			ref="box"
+			:class="['box', !boxUnfold && 'box-fold']"
+			@mousedown="domMouseDown"
+			@mouseup="domMouseUp"
+			@mouseout="domMouseOut"
+		>
 			<div class="time">
 				<span>{{ currentTime }}</span>
 				<!-- <el-divider direction="vertical" />
@@ -29,8 +50,13 @@
 			<deep-seek v-show="isAI" />
 			<div v-show="!isAI">
 				<div class="search-input">
-					<input v-model="searchValue" ref="input" placeholder="搜索..." type="text"
-						@keyup.enter.native="enter" />
+					<input
+						v-model="searchValue"
+						ref="input"
+						placeholder="搜索..."
+						type="text"
+						@keyup.enter.native="enter"
+					/>
 				</div>
 				<div id="book" class="book">
 					<div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
@@ -157,7 +183,7 @@ const goBook = (path: string): void => {
 	if (path.startsWith("http://") || path.startsWith("https://")) {
 		window.open(path);
 	} else {
-		console.log()
+		console.log();
 		window.open(window.location.href + path);
 	}
 };
@@ -244,6 +270,21 @@ const bgSizeChange = (e: KeyboardEvent): void => {
 		setSizeIndex(index);
 	}
 };
+// 按wasd移动背景图位置
+const updatePosition = (axis: "top" | "left", value: number, setter: (val: string) => void): void => {
+    const current = parseInt(page.value.style[axis] || "0");
+    page.value.style[axis] = `${current + value}px`;
+    setter(page.value.style[axis]);
+};
+
+const bgPositionChange = (e: KeyboardEvent): void => {
+    const key = e.key.toLocaleLowerCase();
+    if (key === "w") updatePosition("top", -1, setBgY);
+    if (key === "a") updatePosition("left", -1, setBgX);
+    if (key === "s") updatePosition("top", 1, setBgY);
+    if (key === "d") updatePosition("left", 1, setBgX);
+};
+
 // 监听键盘事件
 const keyDown = (): void => {
 	document.addEventListener("keydown", (e: KeyboardEvent): void => {
@@ -252,6 +293,7 @@ const keyDown = (): void => {
 		} else if (bgMode.value == FULL_SCREEN && e.target instanceof HTMLElement && e.target.localName == "body") {
 			bgSizeChange(e);
 			bgSrcChange(e);
+			bgPositionChange(e);
 		}
 	});
 	document.addEventListener("keyup", (e: KeyboardEvent): void => {
