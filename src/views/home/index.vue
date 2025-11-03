@@ -33,6 +33,7 @@
 				></div>
 			</div>
 		</div>
+		<!-- <TimeClock /> -->
 		<div
 			id="box"
 			ref="box"
@@ -84,6 +85,7 @@ import Grid from "@/components/Grid.vue";
 import ImgList from "@/components/ImgList.vue";
 import DeepSeek from "@/components/DeepSeek.vue";
 import useMouseEvent from "@/hooks/useMouseEvent";
+import TimeClock from "@/components/TimeClock.vue";
 import { ref, watch, onMounted, reactive } from "vue";
 import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
 import { TopLeft, BottomRight } from "@element-plus/icons-vue";
@@ -237,7 +239,7 @@ const bgChange = (type: number): void => {
 		bgIndex.value = index;
 		clearTimeout(mouseTimer);
 		mouseTimer = null;
-	}, 1000);
+	}, 300);
 };
 // 按下上下键盘切换背景图
 const bgSrcChange = (e: KeyboardEvent): void => {

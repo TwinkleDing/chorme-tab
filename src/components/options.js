@@ -1,3 +1,5 @@
+export const exampleImg = "/img/example.jpg";
+
 export const PageBgImgList = [
 	"/img/bg/guo1.jpg",
 	"/img/bg/guo2.jpg",
@@ -88,6 +90,11 @@ export const BookList = [
 	{
 		title: "你画我猜",
 		href: "draw",
+		icon: DrawIcon,
+	},
+	{
+		title: "拼图",
+		href: "puzzle",
 		icon: DrawIcon,
 	},
 	{
