@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "二丁果然",
 	"version": "1.0.0",
-	"description": "用爱豆的图片做成浏览器首页插件，虽然丧失后谷歌原来的功能，增加观赏性与趣味性",
+	"description": "用爱豆的图片做成浏览器首页插件",
 	"author": "二丁一然",
 	"icons": {
 		"16": "./favicon.png",

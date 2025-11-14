@@ -1,47 +1,26 @@
 <!--
- * @Author: twinkleding
+ * @Author: twinkle-ding
  * @Date: 2024-11-12 11:06:04
  * @LastEditTime: 2024-12-02 19:45:52
- * @LastEditors: twinkleding
+ * @LastEditors: twinkle-ding
  * @FilePath: \chorme-tab\src\views\home\index.vue
  * @Description: 
 -->
 <template>
 	<div class="home" ref="home" @mousemove="pageMove">
-		<div
-			id="page"
-			ref="page"
-			@mousewheel="mousewheel"
-			@mousedown="domMouseDown"
-			@mouseup="domMouseUp"
-			@dblclick="resetBg"
-		>
-			<img
-				v-if="bgMode === FULL_SCREEN"
-				:src="pageBgImgList[bgIndex]"
-				:style="bgSizeList[sizeIndex]"
-				draggable="false"
-				@mouseout="domMouseOut"
-			/>
+		<div id="page" ref="page" @mousewheel="mousewheel" @mousedown="domMouseDown" @mouseup="domMouseUp"
+			@dblclick="resetBg">
+			<img v-if="bgMode === FULL_SCREEN" :src="pageBgImgList[bgIndex]" :style="bgSizeList[sizeIndex]"
+				draggable="false" @mouseout="domMouseOut" />
 			<div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
-				<div
-					v-for="item in pageGridImgList"
-					:style="{
-						backgroundImage: `url(${item})`,
-					}"
-					@mouseout="domMouseOut"
-				></div>
+				<div v-for="item in pageGridImgList" :style="{
+					backgroundImage: `url(${item})`,
+				}" @mouseout="domMouseOut"></div>
 			</div>
 		</div>
 		<!-- <TimeClock /> -->
-		<div
-			id="box"
-			ref="box"
-			:class="['box', !boxUnfold && 'box-fold']"
-			@mousedown="domMouseDown"
-			@mouseup="domMouseUp"
-			@mouseout="domMouseOut"
-		>
+		<div id="box" ref="box" :class="['box', !boxUnfold && 'box-fold']" @mousedown="domMouseDown"
+			@mouseup="domMouseUp" @mouseout="domMouseOut">
 			<div class="time">
 				<span>{{ currentTime }}</span>
 				<!-- <el-divider direction="vertical" />
@@ -51,13 +30,8 @@
 			<deep-seek v-show="isAI" />
 			<div v-show="!isAI">
 				<div class="search-input">
-					<input
-						v-model="searchValue"
-						ref="input"
-						placeholder="搜索..."
-						type="text"
-						@keyup.enter.native="enter"
-					/>
+					<input v-model="searchValue" ref="input" placeholder="搜索..." type="text"
+						@keyup.enter.native="enter" />
 				</div>
 				<div id="book" class="book">
 					<div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
@@ -80,7 +54,6 @@
 <script setup lang="ts">
 import { dateFormat } from "@/utils";
 import useImgStore from "@/store/img";
-import { useRouter } from "vue-router";
 import Grid from "@/components/Grid.vue";
 import ImgList from "@/components/ImgList.vue";
 import DeepSeek from "@/components/DeepSeek.vue";
@@ -93,7 +66,6 @@ import { PageBgImgList, PageGridImgList, BgSizeList, BookList } from "@/componen
 
 const BgMinWidth = 800;
 const MouseWheelRatio = 1.1;
-const router = useRouter();
 const imgStore = useImgStore();
 const { mouseDown, mouseMove, mouseUp, mouseOut } = useMouseEvent();
 const {
@@ -134,6 +106,10 @@ const pageGridImgList = reactive(PageGridImgList);
 const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 let mouseDownTimer: any = null;
 
+/**
+ * 鼠标按下事件
+ * @param e 鼠标事件
+ */
 const domMouseDown = (e: MouseEvent): void => {
 	mouseDown(e);
 	if (box.value?.contains(e.target as Node)) {
@@ -142,6 +118,10 @@ const domMouseDown = (e: MouseEvent): void => {
 		}, 100);
 	}
 };
+/**
+ * 鼠标松开事件
+ * @param e 鼠标事件
+ */
 const domMouseUp = (e: MouseEvent): void => {
 	mouseUp();
 	if (mouseDownTimer) {
@@ -152,19 +132,30 @@ const domMouseUp = (e: MouseEvent): void => {
 		setBoxBgColor("transparent");
 	}
 };
+/**
+ * 鼠标移出事件
+ * @param e 鼠标事件
+ */
 const domMouseOut = (e: MouseEvent): void => {
 	mouseOut();
 	if (box.value?.contains(e.target as Node)) {
 		setBoxBgColor("transparent");
 	}
 };
+/**
+ * 设置盒子背景颜色
+ * @param color 背景颜色
+ */
 const setBoxBgColor = (color: string): void => {
 	if (box.value) {
 		box.value.style.backgroundColor = color;
 	}
 };
 
-// 鼠标移动
+/**
+ * 页面移动事件
+ * @param e 鼠标事件
+ */
 const pageMove = (e: MouseEvent): void => {
 	if (box.value?.contains(e.target as Node)) {
 		const position = mouseMove(e, box.value);
@@ -180,15 +171,20 @@ const pageMove = (e: MouseEvent): void => {
 		}
 	}
 };
-// 跳转书签
+/**
+ * 跳转书签
+ * @param path 书签路径
+ */
 const goBook = (path: string): void => {
-	if (path.startsWith("http://") || path.startsWith("https://")) {
+	if (/^https?:\/\/[^\s]+$/.test(path)) {
 		window.open(path);
 	} else {
-		console.log();
 		window.open(window.location.href + path);
 	}
 };
+/**
+ * 搜索事件
+ */
 const enter = async (): Promise<void> => {
 	if (searchValue.value.startsWith("www.")) {
 		window.open("http://" + searchValue.value);
@@ -197,7 +193,10 @@ const enter = async (): Promise<void> => {
 		searchValue.value = "";
 	}
 };
-// 鼠标滚轮缩放背景图
+/**
+ * 鼠标滚轮缩放背景图
+ * @param e 鼠标事件
+ */
 const mousewheel = (e: WheelEvent): void => {
 	if (controlDown.value) return;
 	const reg1 = /[^0-9|.]/gi;
@@ -226,7 +225,10 @@ const mousewheel = (e: WheelEvent): void => {
 	setBgX(page.value.style.left);
 	setBgY(page.value.style.top);
 };
-// 切换背景图片
+/**
+ * 切换背景图片
+ * @param type 切换类型 1: 下一张 -1: 上一张
+ */
 const bgChange = (type: number): void => {
 	if (mouseTimer || controlDown.value) {
 		return;
@@ -241,7 +243,10 @@ const bgChange = (type: number): void => {
 		mouseTimer = null;
 	}, 300);
 };
-// 按下上下键盘切换背景图
+/**
+ * 按下上下键盘切换背景图
+ * @param e 键盘事件
+ */
 const bgSrcChange = (e: KeyboardEvent): void => {
 	if (e.key === "ArrowUp") {
 		bgChange(-1);
@@ -250,7 +255,10 @@ const bgSrcChange = (e: KeyboardEvent): void => {
 		bgChange(1);
 	}
 };
-// 按左右键切换背景图的契合度
+/**
+ * 按左右键切换背景图的契合度
+ * @param e 键盘事件
+ */
 const bgSizeChange = (e: KeyboardEvent): void => {
 	let index = sizeIndex.value;
 	if (e.key === "ArrowLeft") {
@@ -272,22 +280,32 @@ const bgSizeChange = (e: KeyboardEvent): void => {
 		setSizeIndex(index);
 	}
 };
-// 按wasd移动背景图位置
+/**
+ * 
+ * @param axis 轴
+ * @param value 移动值
+ * @param setter  setter函数
+ */
 const updatePosition = (axis: "top" | "left", value: number, setter: (val: string) => void): void => {
-    const current = parseInt(page.value.style[axis] || "0");
-    page.value.style[axis] = `${current + value}px`;
-    setter(page.value.style[axis]);
+	const current = parseInt(page.value.style[axis] || "0");
+	page.value.style[axis] = `${current + value}px`;
+	setter(page.value.style[axis]);
 };
 
+/**
+ * 按w|a|s|d移动背景图位置
+ * @param e 键盘事件
+ */
 const bgPositionChange = (e: KeyboardEvent): void => {
-    const key = e.key.toLocaleLowerCase();
-    if (key === "w") updatePosition("top", -1, setBgY);
-    if (key === "a") updatePosition("left", -1, setBgX);
-    if (key === "s") updatePosition("top", 1, setBgY);
-    if (key === "d") updatePosition("left", 1, setBgX);
+	const key: string = e.key.toLocaleLowerCase();
+	if (key === "w") updatePosition("top", -1, setBgY);
+	if (key === "a") updatePosition("left", -1, setBgX);
+	if (key === "s") updatePosition("top", 1, setBgY);
+	if (key === "d") updatePosition("left", 1, setBgX);
 };
-
-// 监听键盘事件
+/**
+ * 监听键盘事件
+ */
 const keyDown = (): void => {
 	document.addEventListener("keydown", (e: KeyboardEvent): void => {
 		if (["Control", "Alt", "Meta", "Shift"].includes(e.key)) {
@@ -304,14 +322,18 @@ const keyDown = (): void => {
 		}
 	});
 };
-// 初始化背景图
+/**
+ * 初始化背景图位置和大小
+ */
 const initBg = (): void => {
 	getBgW && (page.value.style.width = getBgW);
 	getBgH && (page.value.style.height = getBgH);
 	getBgX && (page.value.style.left = getBgX);
 	getBgY && (page.value.style.top = getBgY);
 };
-// 重置背景图位置和大小
+/**
+ * 重置背景图位置和大小
+ */
 const resetBg = (): void => {
 	page.value.style.width = "";
 	page.value.style.height = "";
@@ -322,25 +344,33 @@ const resetBg = (): void => {
 	setBgX("");
 	setBgY("");
 };
-// 初始化搜索框位置
+/**
+ * 初始化搜索框位置
+ */
 const initBox = (): void => {
 	if (getSearchX !== null) {
 		box.value.style.left = getSearchX;
 		box.value.style.top = getSearchY;
 	}
 };
-// 获取当前时间
+/**
+ * 获取当前时间
+ */
 const getTime = (): void => {
 	setInterval(() => {
 		currentTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
 	}, 1000);
 };
-// 设置缩放
+/**
+ * 设置缩放
+ */
 const setUnfold = (): void => {
 	boxUnfold.value = !boxUnfold.value;
 	setBoxUnfold(boxUnfold.value);
 };
-// 切换模式，单图还是栅格图
+/**
+ * 切换模式，单图还是栅格图
+ */
 const setMode = (): void => {
 	resetBg();
 };
