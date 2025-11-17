@@ -22,7 +22,11 @@
 		<div id="box" ref="box" :class="['box', !boxUnfold && 'box-fold']" @mousedown="domMouseDown"
 			@mouseup="domMouseUp" @mouseout="domMouseOut">
 			<div class="time">
-				<span>{{ currentTime }}</span>
+				<span style="margin-right: 5px;">{{ currentTime }}</span>
+				<template v-if="stock">
+					<span>{{ stock.开盘价 }}➡{{ stock.现价 }}</span>
+					<span :style="{ color: stock.涨跌幅 < 0 ? 'green' : 'red',marginLeft: '5px' }"> {{ stock.涨跌幅 }}</span>
+				</template>
 				<!-- <el-divider direction="vertical" />
 				<el-button v-if="!isAI" link type="primary" @click="isAI = true">使用DeepSeek</el-button>
 				<el-button v-if="isAI" link type="primary" @click="isAI = false">换回普通模式</el-button> -->
@@ -59,7 +63,7 @@ import ImgList from "@/components/ImgList.vue";
 import DeepSeek from "@/components/DeepSeek.vue";
 import useMouseEvent from "@/hooks/useMouseEvent";
 import TimeClock from "@/components/TimeClock.vue";
-import { ref, watch, onMounted, reactive } from "vue";
+import { ref, watch, onMounted, reactive, onUnmounted } from "vue";
 import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
 import { TopLeft, BottomRight } from "@element-plus/icons-vue";
 import { PageBgImgList, PageGridImgList, BgSizeList, BookList } from "@/components/Options.js";
@@ -105,6 +109,8 @@ const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 let mouseDownTimer: any = null;
+const stock = ref(null);
+const stockInterval = ref(null);
 
 /**
  * 鼠标按下事件
@@ -374,6 +380,40 @@ const setUnfold = (): void => {
 const setMode = (): void => {
 	resetBg();
 };
+const getStock = (): void => {
+	const stockCode = 'sh515080';
+
+	// 调用接口并处理数据
+	fetch(`http://qt.gtimg.cn/q=${stockCode}`)
+		.then(response => {
+			if (!response.ok) {
+				throw new Error('网络请求失败');
+			}
+			return response.text(); // 接口返回纯文本，需手动解析
+		})
+		.then(data => {
+			const rawData = data.replace(/^v_.*?="/, '').replace(/"$/, '');
+			const params = rawData.split('~');
+			// 解析所需字段（对应接口参数顺序）
+			const stockInfo = {
+				股票代码: stockCode,
+				当前价格: parseFloat(params[3]),
+				昨日收盘价: parseFloat(params[4]),
+				开盘价: parseFloat(params[5]),
+				涨跌额: parseFloat(params[31]),
+				涨跌幅: `${parseFloat(params[32])}%`,
+				当日最低价: parseFloat(params[34]),
+				当日最高价: parseFloat(params[33]),
+				现价: parseFloat(params[3]),
+				成交量: parseInt(params[6], 10),
+				更新时间: params[30]
+			};
+			stock.value = stockInfo;
+		})
+		.catch(error => {
+			console.error('获取数据失败：', error);
+		});
+}
 
 watch(
 	() => imgStore.bgIndex,
@@ -398,6 +438,13 @@ onMounted(() => {
 	initBox();
 	keyDown();
 	getTime();
+	getStock();
+	stockInterval.value = setInterval(() => {
+		getStock();
+	}, 5000);
+});
+onUnmounted(() => {
+	clearInterval(stockInterval.value);
 });
 </script>
 
