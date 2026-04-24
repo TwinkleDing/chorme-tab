@@ -45,12 +45,12 @@
       <div class="nav">
         <span style="margin-right: 5px">{{ currentTime }}</span>
         <div @click="toggleStockList" style="margin-left: 10px">
-          <el-icon v-if="showStockList"
-            ><Hide style="position: relative; top: 2px"
-          /></el-icon>
-          <el-icon v-else size="20"
-            ><TrendCharts style="position: relative; top: 4px"
-          /></el-icon>
+          <el-icon v-if="showStockList">
+            <Hide style="position: relative; top: 2px" />
+          </el-icon>
+          <el-icon v-else size="20">
+            <TrendCharts style="position: relative; top: 4px" />
+          </el-icon>
         </div>
       </div>
       <StockList v-show="showStockList" />
