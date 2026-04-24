@@ -18,6 +18,7 @@ declare module 'vue' {
     ImgList: typeof import('./src/components/ImgList.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    StockList: typeof import('./src/components/StockList.vue')['default']
     TimeClock: typeof import('./src/components/TimeClock.vue')['default']
   }
   export interface ComponentCustomProperties {

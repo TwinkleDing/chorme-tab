@@ -23,13 +23,58 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { ref,onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 
+const hou1 = ref<HTMLElement>();
+const hou2 = ref<HTMLElement>();
+const min1 = ref<HTMLElement>();
+const min2 = ref<HTMLElement>();
+const sec1 = ref<HTMLElement>();
 const sec2 = ref<HTMLElement>();
+let timeInterval: number | null = null;
+
+// 更新时间
+const updateTime = () => {
+  const now = new Date();
+  const hours = now.getHours().toString().padStart(2, '0');
+  const minutes = now.getMinutes().toString().padStart(2, '0');
+  const seconds = now.getSeconds().toString().padStart(2, '0');
+  
+  // 更新小时
+  if (hou1.value) {
+    hou1.value.textContent = hours[0];
+  }
+  if (hou2.value) {
+    hou2.value.textContent = hours[1];
+  }
+  
+  // 更新分钟
+  if (min1.value) {
+    min1.value.textContent = minutes[0];
+  }
+  if (min2.value) {
+    min2.value.textContent = minutes[1];
+  }
+  
+  // 更新秒
+  if (sec1.value) {
+    sec1.value.textContent = seconds[0];
+  }
+  // sec2通过动画实现，不需要手动更新
+};
 
 onMounted(() => {
+  // 初始化时间
+  updateTime();
+  // 每秒更新一次时间
+  timeInterval = window.setInterval(updateTime, 1000);
+});
 
-
+onUnmounted(() => {
+  // 清除定时器
+  if (timeInterval) {
+    clearInterval(timeInterval);
+  }
 });
 </script>
 

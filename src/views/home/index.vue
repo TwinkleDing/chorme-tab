@@ -44,75 +44,16 @@
     >
       <div class="nav">
         <span style="margin-right: 5px">{{ currentTime }}</span>
-      </div>
-      <div v-for="(stock, index) in stocks" :key="index" class="stock-box">
-        <div class="stock-input">
-          <el-icon v-if="!stock.stockCodeShow">
-            <EditPen @click="stock.stockCodeShow = true" />
-          </el-icon>
-          <el-input
-            v-if="stock.stockCodeShow"
-            v-model="stock.stockCode"
-            placeholder="..."
-            @keyup.enter="handleStockCodeEnter(stock, index)"
-            @blur="handleStockCodeBlur(stock)"
-          />
-        </div>
-        <div class="nav-stock" @click="setCurrentStock(index)">
-          <span v-if="!stock.stockCodeShow" class="stock-name">
-            {{ stock.股票名称 }}：
-          </span>
-          <span>
-            {{ stock.昨日收盘价 }}
-          </span>
-          <span
-            :style="{
-              color:
-                parseFloat(stock.开盘价) < parseFloat(stock.昨日收盘价) ? 'green' : 'red',
-            }"
-          >
-            ➡
-          </span>
-          <span>
-            {{ stock.开盘价 }}
-          </span>
-          <span
-            :style="{
-              color: parseFloat(stock.现价) < parseFloat(stock.开盘价) ? 'green' : 'red',
-            }"
-          >
-            {{ stock.现价 > stock.开盘价 ? "⬆" : "⬇" }}
-          </span>
-          <span>{{ stock.现价 }}</span>
-          <span
-            :style="{
-              color: parseFloat(stock.涨跌幅) < 0 ? 'green' : 'red',
-              marginLeft: '5px',
-            }"
-          >
-            {{ stock.涨跌幅 }}
-          </span>
-          <el-icon class="add-stock" @click.stop="addStockRow(index)">
-            <Plus />
-          </el-icon>
-          <el-icon class="delete-stock" @click.stop="deleteStock(index)">
-            <Delete />
-          </el-icon>
+        <div @click="toggleStockList" style="margin-left: 10px">
+          <el-icon v-if="showStockList"
+            ><Hide style="position: relative; top: 2px"
+          /></el-icon>
+          <el-icon v-else size="20"
+            ><TrendCharts style="position: relative; top: 4px"
+          /></el-icon>
         </div>
       </div>
-      <div v-if="stockListShow" class="stock-bs">
-        <div>卖五：{{ currentStock.卖五 }}</div>
-        <div>卖四：{{ currentStock.卖四 }}</div>
-        <div>卖三：{{ currentStock.卖三 }}</div>
-        <div>卖二：{{ currentStock.卖二 }}</div>
-        <div>卖一：{{ currentStock.买一 }}</div>
-        <hr style="opacity: 0.1" />
-        <div>买一：{{ currentStock.买一 }}</div>
-        <div>买二：{{ currentStock.买二 }}</div>
-        <div>买三：{{ currentStock.买三 }}</div>
-        <div>买四：{{ currentStock.买四 }}</div>
-        <div>买五：{{ currentStock.买五 }}</div>
-      </div>
+      <StockList v-show="showStockList" />
       <deep-seek v-show="isAI" />
       <div v-show="!isAI">
         <div class="search-input">
@@ -148,12 +89,13 @@ import useImgStore from "@/store/img";
 import Grid from "@/components/Grid.vue";
 import ImgList from "@/components/ImgList.vue";
 import DeepSeek from "@/components/DeepSeek.vue";
+import StockList from "@/components/StockList.vue";
 import useMouseEvent from "@/hooks/useMouseEvent";
 import TimeClock from "@/components/TimeClock.vue";
 import { ref, watch, onMounted, reactive, onUnmounted } from "vue";
 import { setStorage, getStorage } from "@/utils";
 import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
-import { TopLeft, BottomRight, EditPen, Delete, Plus } from "@element-plus/icons-vue";
+import { TopLeft, BottomRight, Hide, TrendCharts } from "@element-plus/icons-vue";
 import {
   PageBgImgList,
   PageGridImgList,
@@ -202,14 +144,15 @@ const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 let mouseDownTimer: any = null;
-const currentStock = ref<any>({});
-const stocks = ref<Array<any>>([]);
-const stockInterval = ref(null);
-const stockListShow = ref<boolean>(false);
-const DEFAULT_STOCK_CODE = "sh510500";
-const stockStorage = getStorage("stockCode") || DEFAULT_STOCK_CODE;
-const stockCode = ref<any>(stockStorage.split(","));
-const editingStockIndex = ref<number>(-1);
+const showStockList = ref<boolean>(true);
+
+/**
+ * 切换股票列表显示/隐藏
+ */
+const toggleStockList = (): void => {
+  showStockList.value = !showStockList.value;
+};
+
 /**
  * 鼠标按下事件
  * @param e 鼠标事件
@@ -487,115 +430,6 @@ const setUnfold = (): void => {
 const setMode = (): void => {
   resetBg();
 };
-const getStock = (code = DEFAULT_STOCK_CODE, index: number = 0): void => {
-  // 调用接口并处理数据
-  fetch(`http://qt.gtimg.cn/q=${code}`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("网络请求失败");
-      }
-      return response.arrayBuffer(); // 获取二进制数据以正确处理编码
-    })
-    .then((buffer) => {
-      // 使用TextDecoder解码GBK编码的数据
-      const decoder = new TextDecoder("gbk");
-      const data = decoder.decode(buffer);
-      const rawData = data.replace(/^v_.*?="/, "").replace(/"$/, "");
-      const params = rawData.split("~");
-
-      // 计算涨幅的公共方法
-      const calculateChange = (price: string, prevClose: string): string => {
-        const priceNum = parseFloat(price);
-        const prevCloseNum = parseFloat(prevClose);
-        return (((priceNum - prevCloseNum) / prevCloseNum) * 100).toFixed(2);
-      };
-
-      // 解析所需字段（对应接口参数顺序）
-      const prevClose = params[4];
-      const stockInfo = {
-        股票名称: params[1],
-        stockCode: code,
-        当前价格: parseFloat(params[3]),
-        昨日收盘价: parseFloat(params[4]),
-        开盘价: parseFloat(params[5]),
-        涨跌额: parseFloat(params[31]),
-        涨跌幅: `${parseFloat(params[32])}%`,
-        当日最低价: parseFloat(params[34]),
-        当日最高价: parseFloat(params[33]),
-        现价: parseFloat(params[3]),
-        成交量: parseInt(params[6], 10),
-        更新时间: params[30],
-        买一: `${params[9]} ~ ${calculateChange(params[9], prevClose)}% -|- ${
-          params[10]
-        }`,
-        买二: `${params[11]} ~ ${calculateChange(params[11], prevClose)}% -|- ${
-          params[12]
-        }`,
-        买三: `${params[13]} ~ ${calculateChange(params[13], prevClose)}% -|- ${
-          params[14]
-        }`,
-        买四: `${params[15]} ~ ${calculateChange(params[15], prevClose)}% -|- ${
-          params[16]
-        }`,
-        买五: `${params[17]} ~ ${calculateChange(params[17], prevClose)}% -|- ${
-          params[18]
-        }`,
-        卖一: `${params[19]} ~ ${calculateChange(params[19], prevClose)}% -|- ${
-          params[20]
-        }`,
-        卖二: `${params[21]} ~ ${calculateChange(params[21], prevClose)}% -|- ${
-          params[22]
-        }`,
-        卖三: `${params[23]} ~ ${calculateChange(params[23], prevClose)}% -|- ${
-          params[24]
-        }`,
-        卖四: `${params[25]} ~ ${calculateChange(params[25], prevClose)}% -|- ${
-          params[26]
-        }`,
-        卖五: `${params[27]} ~ ${calculateChange(params[27], prevClose)}% -|- ${
-          params[28]
-        }`,
-      };
-
-      stocks.value[index] = stockInfo;
-    })
-    .catch((error) => {
-      console.error("获取数据失败：", error);
-    });
-};
-
-const handleStockCodeEnter = (stock, index): void => {
-  stock.stockCodeShow = false;
-  setStorage("stockCode", stocks.value.map((item) => item.stockCode).join(","));
-};
-
-const handleStockCodeBlur = (stock: any): void => {
-  stock.stockCodeShow = false;
-};
-
-/**
- * 删除股票
- * @param index 股票索引
- */
-const deleteStock = (index: number): void => {
-  stocks.value.splice(index, 1);
-};
-
-/**
- * 在指定索引后添加新股票行
- * @param index 当前股票索引
- */
-const addStockRow = (index: number): void => {
-  stocks.value.push({
-    stockCode: "",
-    stockCodeShow: true,
-  });
-  editingStockIndex.value = index;
-};
-const setCurrentStock = (index: number): void => {
-  currentStock.value = stocks.value[index];
-  stockListShow.value = true;
-};
 
 watch(
   () => imgStore.bgIndex,
@@ -620,21 +454,11 @@ onMounted(() => {
   initBox();
 
   getTime();
-  stockCode.value.forEach((stock, index) => {
-    getStock(stock, index);
-  });
-  // 定时更新所有股票
-  stockInterval.value = setInterval(() => {
-    stockCode.value.forEach((stock, index) => {
-      getStock(stock, index);
-    });
-  }, 1000); // 改为5秒更新一次，减少请求频率
 
   document.addEventListener("keydown", handleKeyDown);
   document.addEventListener("keyup", handleKeyUp);
 });
 onUnmounted(() => {
-  clearInterval(stockInterval.value);
   // 移除键盘事件监听器
   document.removeEventListener("keydown", handleKeyDown);
   document.removeEventListener("keyup", handleKeyUp);
@@ -699,97 +523,11 @@ onUnmounted(() => {
   padding: 0 20px;
   box-shadow: 0 0 10px #00000080;
 
-  .nav,
-  .stock-box,
-  .nav-stock {
+  .nav {
     display: flex;
     align-items: center;
     height: 32px;
     line-height: 32px;
-  }
-  .stock-box {
-    margin-bottom: 8px;
-  }
-  .stock-name {
-    max-width: 110px;
-    display: inline-block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .stock-input {
-    margin-right: 8px;
-    display: inline-block;
-    .el-icon {
-      top: 2px;
-    }
-    ::v-deep(.el-input) {
-      width: 100px;
-      position: relative;
-      top: -3px;
-      .el-input__wrapper {
-        background-color: #00000033;
-        box-shadow: none;
-        height: 24px;
-      }
-
-      .el-input__inner {
-        box-shadow: none;
-        color: #fff;
-        height: 24px;
-        line-height: 24px;
-      }
-    }
-  }
-  .add-stock {
-    margin-left: 10px;
-    cursor: pointer;
-    color: #52c41a;
-    font-size: 14px;
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
-  .delete-stock {
-    margin-left: 10px;
-    cursor: pointer;
-    color: #ff4d4f;
-    font-size: 14px;
-
-    &:hover {
-      opacity: 0.8;
-    }
-  }
-  .stock-bs {
-    position: absolute;
-    left: 650px;
-    top: 0;
-    width: max-content;
-
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-
-    div {
-      margin: 5px 0;
-      display: flex;
-      justify-content: space-between;
-
-      &:nth-child(-n + 5) {
-        color: #ff4d4f; // 卖盘红色
-      }
-
-      &:nth-child(n + 7) {
-        color: #52c41a; // 买盘绿色
-      }
-
-      hr {
-        margin: 10px 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-    }
   }
   .search-input {
     width: 100%;
