@@ -19,7 +19,7 @@
             stock.current < stock.openPrice ? 'stock-down' : 'stock-up'
           ]"
         >
-          {{ stock.current > stock.openPrice ? "⬆" : "⬇" }}
+          {{ stock.current < stock.openPrice ? "⬇" : "⬆" }}
         </span>
         <span>{{ stock.current }}</span>
         <span
