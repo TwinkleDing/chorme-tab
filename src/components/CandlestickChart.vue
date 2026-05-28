@@ -50,6 +50,11 @@ function initChart() {
     borderDownColor: '#bbb',
     wickUpColor: '#666',
     wickDownColor: '#bbb',
+    priceFormat: {
+      type: 'price',
+      precision: 3,
+      minMove: 0.001,
+    },
   })
 
   if (props.data.length > 0) {

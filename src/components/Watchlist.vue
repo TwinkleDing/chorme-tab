@@ -11,7 +11,7 @@
         <span class="item-code">{{ item.code }}</span>
       </div>
       <div class="item-price">
-        <span class="price">{{ item.currentPrice.toFixed(2) }}</span>
+        <span class="price">{{ item.currentPrice.toFixed(3) }}</span>
         <span
           :class="[
             'change',
