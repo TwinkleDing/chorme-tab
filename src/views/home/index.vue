@@ -144,13 +144,14 @@ const pageBgImgList = reactive(PageBgImgList);
 const pageGridImgList = reactive(PageGridImgList);
 const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
 let mouseDownTimer: any = null;
-const showStockList = ref<boolean>(true);
+const showStockList = ref<boolean>(getStorage('showStockList') !== 'false');
 
 /**
  * 切换股票列表显示/隐藏
  */
 const toggleStockList = (): void => {
   showStockList.value = !showStockList.value;
+  setStorage('showStockList', showStockList.value);
 };
 
 /**
