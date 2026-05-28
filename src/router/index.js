@@ -50,6 +50,14 @@ const route = createRouter({
 				title: "Stock",
 			},
 		},
+		{
+			path: "/tasks",
+			name: "Tasks",
+			component: () => import("@/views/tasks/index.vue"),
+			meta: {
+				title: "任务管理",
+			},
+		},
 	],
 	strict: true,
 	scrollBehavior: () => ({ left: 0, top: 0 }),
