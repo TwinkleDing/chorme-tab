@@ -41,5 +41,12 @@ export default defineConfig({
 		host: "0.0.0.0",
 		https: false,
 		port: 520,
+		proxy: {
+			"/api/kline": {
+				target: "https://web.ifzq.gtimg.cn",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api\/kline/, "/appstock/app/fqkline"),
+			},
+		},
 	},
 });

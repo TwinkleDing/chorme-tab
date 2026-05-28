@@ -42,6 +42,14 @@ const route = createRouter({
 				title: "puzzle",
 			},
 		},
+		{
+			path: "/stock",
+			name: "Stock",
+			component: () => import("@/views/stock/index.vue"),
+			meta: {
+				title: "Stock",
+			},
+		},
 	],
 	strict: true,
 	scrollBehavior: () => ({ left: 0, top: 0 }),

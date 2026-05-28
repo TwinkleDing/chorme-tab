@@ -98,6 +98,11 @@ export const BookList = [
 		icon: DrawIcon,
 	},
 	{
+		title: "股票",
+		href: "stock",
+		icon: "https://cdn-icons-png.flaticon.com/128/2722/2722712.png",
+	},
+	{
 		title: "游戏避难所",
 		href: "https://www.flysheep6.com",
 		icon: FlySheep,

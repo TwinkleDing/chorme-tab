@@ -8,6 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Back: typeof import('./src/components/Back.vue')['default']
+    CandlestickChart: typeof import('./src/components/CandlestickChart.vue')['default']
     DeepSeek: typeof import('./src/components/DeepSeek.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
@@ -20,6 +21,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     StockList: typeof import('./src/components/StockList.vue')['default']
     TimeClock: typeof import('./src/components/TimeClock.vue')['default']
+    Watchlist: typeof import('./src/components/Watchlist.vue')['default']
   }
   export interface ComponentCustomProperties {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
