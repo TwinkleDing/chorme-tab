@@ -1,12 +1,12 @@
 <template>
-  <div class="stock-page">
+  <div class="stock-page" :class="{ 'page-gray': pageGray }">
     <div class="top-bar">
       <Back />
       <span class="top-title">数据看板</span>
     </div>
     <div class="stock-layout">
       <!-- 侧边栏 -->
-      <div class="sidebar">
+      <div class="sidebar" :class="{ collapsed: sidebarCollapsed }">
         <div class="sidebar-header">
           <h3>自选股</h3>
           <div class="add-stock">
@@ -26,13 +26,20 @@
               添加
             </el-button>
           </div>
+          <div class="sidebar-close" @click="sidebarCollapsed = true">
+            <el-icon :size="14"><DArrowLeft /></el-icon>
+          </div>
         </div>
         <Watchlist
           :items="stockStore.watchlistData"
           :selected-code="stockStore.selectedCode"
           @select="onSelectStock"
           @remove="stockStore.removeFromWatchlist"
+          @reorder="stockStore.moveWatchlistItem"
         />
+      </div>
+      <div v-show="sidebarCollapsed" class="sidebar-open" @click="sidebarCollapsed = false">
+        <el-icon :size="14"><DArrowRight /></el-icon>
       </div>
 
       <!-- K线图区域 -->
@@ -41,7 +48,14 @@
         <div v-if="stockStore.selectedStockData" class="stock-header">
           <span class="stock-name">{{ stockStore.selectedStockData.name }}</span>
           <span class="stock-code">{{ stockStore.selectedStockData.code }}</span>
-          <span class="stock-price">{{ stockStore.selectedStockData.currentPrice.toFixed(2) }}</span>
+          <span
+            :class="[
+              'stock-price',
+              parseFloat(stockStore.selectedStockData.priceChangePercent) < 0 ? 'down' : 'up'
+            ]"
+          >
+            {{ stockStore.selectedStockData.currentPrice.toFixed(2) }}
+          </span>
           <span
             :class="[
               'stock-change',
@@ -50,18 +64,64 @@
           >
             {{ stockStore.selectedStockData.priceChangePercent }}
           </span>
+          <el-button size="small" @click="pageGray = !pageGray" class="gray-btn">
+            {{ pageGray ? '恢复' : '变灰' }}
+          </el-button>
         </div>
 
         <!-- K线图 -->
         <div class="chart-wrapper">
-          <!-- 实时数据浮层卡片 -->
-          <div v-if="stockStore.selectedCode" class="chart-card">
-            <div class="card-row card-title">
+          <!-- K线图工具栏 -->
+          <div class="chart-toolbar">
+            <div class="toolbar-group">
+              <el-button
+                size="small"
+                :class="{ active: chartPeriod === 'm5' }"
+                @click="switchPeriod('m5')"
+              >5分</el-button>
+              <el-button
+                size="small"
+                :class="{ active: chartPeriod === 'day' }"
+                @click="switchPeriod('day')"
+              >日K</el-button>
+            </div>
+            <div class="toolbar-group">
+              <el-button
+                v-for="r in ranges"
+                :key="r"
+                size="small"
+                :class="{ active: chartDays === r }"
+                @click="switchRange(r)"
+              >{{ r }}日</el-button>
+            </div>
+            <div class="toolbar-group toolbar-ma">
+              <label
+                v-for="ma in maOptions"
+                :key="ma"
+                :class="{ active: activeMas.includes(ma) }"
+                @click="toggleMA(ma)"
+              >
+                MA{{ ma }}
+              </label>
+            </div>
+          </div>
+          <!-- 实时数据浮层卡片（可拖拽） -->
+          <div v-if="stockStore.selectedCode" class="chart-card" :style="cardStyle">
+            <div
+              class="card-drag-handle"
+              @mousedown.prevent="onCardDragStart($event)"
+            >
               <span class="card-name">{{ stockStore.realtimeData[stockStore.selectedCode]?.name || stockStore.selectedCode }}</span>
               <span class="card-code">{{ stockStore.selectedCode }}</span>
+              <span class="card-drag-icon"><el-icon size="12"><Rank /></el-icon></span>
             </div>
             <div class="card-main">
-              <span class="card-price">
+              <span
+                :class="[
+                  'card-price',
+                  stockStore.realtimeData[stockStore.selectedCode]?.currentPrice > stockStore.realtimeData[stockStore.selectedCode]?.openPrice ? 'up' : 'down'
+                ]"
+              >
                 {{ stockStore.realtimeData[stockStore.selectedCode]?.currentPrice?.toFixed(3) ?? '-' }}
                 <span
                   v-if="stockStore.realtimeData[stockStore.selectedCode]"
@@ -80,7 +140,12 @@
             <div class="card-grid">
               <div class="card-cell">
                 <span class="cell-label">开盘</span>
-                <span class="cell-value">
+                <span
+                  :class="[
+                    'cell-value',
+                    stockStore.realtimeData[stockStore.selectedCode]?.openPrice > stockStore.realtimeData[stockStore.selectedCode]?.previousClose ? 'up' : 'down'
+                  ]"
+                >
                   {{ stockStore.realtimeData[stockStore.selectedCode]?.openPrice?.toFixed(3) ?? '-' }}
                   <span
                     v-if="stockStore.realtimeData[stockStore.selectedCode]"
@@ -109,13 +174,15 @@
               </div>
               <div class="card-cell">
                 <span class="cell-label">更新</span>
-                <span class="cell-value time">{{ stockStore.realtimeData[stockStore.selectedCode]?.updateTime ?? '--' }}</span>
+                <span class="cell-value time">{{ fmtUpdateTime(stockStore.realtimeData[stockStore.selectedCode]?.updateTime) }}</span>
               </div>
             </div>
           </div>
           <CandlestickChart
             v-if="stockStore.klineData.length > 0"
             :data="stockStore.klineData"
+            :show-volume="true"
+            :mas="activeMas"
           />
           <div v-else-if="stockStore.selectedCode" class="chart-placeholder">
             {{ klineLoading ? '加载K线数据中...' : '暂无K线数据' }}
@@ -131,12 +198,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import Back from '@/components/Back.vue'
 import Watchlist from '@/components/Watchlist.vue'
 import CandlestickChart from '@/components/CandlestickChart.vue'
 import useStockStore from '@/store/stock'
 import { useKlineData } from '@/hooks/useKlineData'
+import { getStorage, setStorage } from '@/utils'
+import { Rank, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import type { StockData } from '@/types/stock'
 
 const stockStore = useStockStore()
@@ -144,6 +213,79 @@ const { fetchKline, loading: klineLoading } = useKlineData()
 
 const newCode = ref('')
 const adding = ref(false)
+const sidebarCollapsed = ref(false)
+const pageGray = ref(getStorage('pageGray') === 'true')
+watch(pageGray, (v) => setStorage('pageGray', v ? 'true' : 'false'))
+
+// K线图控制
+const ranges = [60, 120, 240]
+const chartPeriod = ref<'m5' | 'day' | 'week' | 'month'>('day')
+const chartDays = ref(120)
+const maOptions = [5, 10, 20, 30]
+const activeMas = ref<number[]>([5, 10, 20])
+
+function toggleMA(ma: number) {
+  const idx = activeMas.value.indexOf(ma)
+  if (idx >= 0) {
+    activeMas.value.splice(idx, 1)
+  } else {
+    activeMas.value.push(ma)
+    activeMas.value.sort((a, b) => a - b)
+  }
+}
+
+async function switchRange(days: number) {
+  chartDays.value = days
+  await reloadChart()
+}
+
+async function switchPeriod(period: 'm5' | 'day' | 'week' | 'month') {
+  chartPeriod.value = period
+  await reloadChart()
+}
+
+async function reloadChart() {
+  if (!stockStore.selectedCode) return
+  const data = await fetchKline(stockStore.selectedCode, chartPeriod.value, chartDays.value)
+  stockStore.setKlineData(data)
+}
+
+// 实时数据卡片拖拽
+const cardX = ref(12)
+const cardY = ref(42)
+let cardDragging = false
+let cardDragStartX = 0
+let cardDragStartY = 0
+let cardDragOrigX = 0
+let cardDragOrigY = 0
+
+const cardStyle = computed(() => ({
+  left: cardX.value + 'px',
+  top: cardY.value + 'px',
+}))
+
+function onCardDragStart(e: MouseEvent) {
+  cardDragging = true
+  cardDragStartX = e.clientX
+  cardDragStartY = e.clientY
+  cardDragOrigX = cardX.value
+  cardDragOrigY = cardY.value
+  document.addEventListener('mousemove', onCardDragMove)
+  document.addEventListener('mouseup', onCardDragEnd)
+}
+
+function onCardDragMove(e: MouseEvent) {
+  if (!cardDragging) return
+  cardX.value = cardDragOrigX + (e.clientX - cardDragStartX)
+  cardY.value = cardDragOrigY + (e.clientY - cardDragStartY)
+}
+
+function onCardDragEnd() {
+  cardDragging = false
+  document.removeEventListener('mousemove', onCardDragMove)
+  document.removeEventListener('mouseup', onCardDragEnd)
+}
+
 let pollTimer: number | null = null
 
 /** 解析GTAPI返回的GBK数据 */
@@ -180,6 +322,14 @@ function parseGtapiResponse(buffer: ArrayBuffer): StockData[] {
   return result
 }
 
+/** 格式化 updateTime "YYYYMMDDHHmmss" → "YYYY-MM-DD HH:mm:ss" */
+function fmtUpdateTime(t: string | undefined): string {
+  if (!t || t.length < 8) return '--'
+  let s = `${t.slice(0,4)}-${t.slice(4,6)}-${t.slice(6,8)}`
+  if (t.length >= 14) s += ` ${t.slice(8,10)}:${t.slice(10,12)}:${t.slice(12,14)}`
+  return s
+}
+
 /** 当前时间是否在 9:00-15:00 的交易时段内 */
 function isTradingTime(): boolean {
   const now = new Date()
@@ -192,7 +342,6 @@ function isTradingTime(): boolean {
 /** 获取多只股票实时行情 */
 async function fetchRealtimeData() {
   if (stockStore.watchlist.length === 0) return
-  if (!isTradingTime()) return
 
   const codes = stockStore.watchlist.join(',')
   try {
@@ -234,7 +383,7 @@ async function addStock() {
 /** 选中股票 - 加载K线 */
 async function onSelectStock(code: string) {
   stockStore.selectStock(code)
-  const data = await fetchKline(code, 'day', 120)
+  const data = await fetchKline(code, chartPeriod.value, chartDays.value)
   stockStore.setKlineData(data)
 }
 
@@ -244,8 +393,10 @@ onMounted(() => {
   // 立即获取一次实时行情
   fetchRealtimeData()
 
-  // 定时轮询
-  pollTimer = window.setInterval(fetchRealtimeData, 1000)
+  // 交易时段内定时轮询
+  if (isTradingTime()) {
+    pollTimer = window.setInterval(fetchRealtimeData, 1000)
+  }
 
   // 如果有自选股且未选中，默认选中第一个
   if (!stockStore.selectedCode && stockStore.watchlist.length > 0) {
@@ -257,7 +408,7 @@ onMounted(() => {
     () => stockStore.selectedCode,
     (newCode) => {
       if (newCode) {
-        fetchKline(newCode, 'day', 120).then((data) => {
+        fetchKline(newCode, chartPeriod.value, chartDays.value).then((data) => {
           stockStore.setKlineData(data)
         })
       }
@@ -327,11 +478,24 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   border-right: 1px solid #e8e8e8;
+  overflow: hidden;
+  transition: width 0.25s, min-width 0.25s, padding 0.25s;
+}
+.sidebar.collapsed {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border-right: none;
+}
+.sidebar.collapsed .sidebar-header,
+.sidebar.collapsed .watchlist {
+  display: none;
 }
 
 .sidebar-header {
   padding: 16px;
   border-bottom: 1px solid #e8e8e8;
+  position: relative;
 
   h3 {
     margin: 0 0 12px 0;
@@ -339,6 +503,47 @@ onUnmounted(() => {
     font-weight: 600;
     color: #1890ff;
   }
+}
+
+.sidebar-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #999;
+  transition: all 0.15s;
+}
+.sidebar-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.sidebar-open {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border: 1px solid #e8e8e8;
+  border-left: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  color: #999;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 8px;
+  transition: all 0.15s;
+}
+.sidebar-open:hover {
+  background: #e6f7ff;
+  color: #1890ff;
 }
 
 .add-stock {
@@ -384,7 +589,9 @@ onUnmounted(() => {
   font-size: 24px;
   font-weight: 700;
   margin-left: auto;
-  color: #333;
+
+  &.up { color: #e53935; }
+  &.down { color: #009944; }
 }
 
 .stock-change {
@@ -393,31 +600,74 @@ onUnmounted(() => {
   min-width: 60px;
   text-align: right;
 
-  &.up {
-    color: #666;
-  }
-  &.down {
-    color: #999;
-  }
+  &.up { color: #e53935; }
+  &.down { color: #009944; }
+}
+
+.gray-btn {
+  margin-left: 8px;
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.toolbar-group .el-button {
+  font-size: 12px;
+  padding: 4px 10px;
+  min-height: 0;
+}
+.toolbar-group .el-button.active {
+  background: #1890ff;
+  color: #fff;
+  border-color: #1890ff;
+}
+.toolbar-ma label {
+  display: inline-block;
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #d9d9d9;
+  color: #666;
+  transition: all 0.15s;
+  user-select: none;
+}
+.toolbar-ma label.active {
+  background: #1890ff;
+  color: #fff;
+  border-color: #1890ff;
 }
 
 .chart-wrapper {
   flex: 1;
-  min-height: 200px;
+  min-height: 0;
   position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-card {
   position: absolute;
-  top: 12px;
-  left: 12px;
   z-index: 10;
   background: rgba(255,255,255,0.95);
   border: 1px solid #e8e8e8;
   border-radius: 8px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   min-width: 220px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.chart-card * {
   pointer-events: none;
 }
 
@@ -427,8 +677,23 @@ onUnmounted(() => {
   gap: 8px;
 }
 
-.card-title {
+.card-drag-handle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-bottom: 6px;
+  cursor: grab;
+  user-select: none;
+  pointer-events: auto !important;
+}
+.card-drag-handle:active {
+  cursor: grabbing;
+}
+.card-drag-icon {
+  margin-left: auto;
+  color: #bbb;
+  display: flex;
+  align-items: center;
 }
 
 .card-name {
@@ -454,7 +719,9 @@ onUnmounted(() => {
 .card-price {
   font-size: 22px;
   font-weight: 700;
-  color: #333;
+
+  &.up { color: #e53935; }
+  &.down { color: #009944; }
 }
 
 .price-arrow {
@@ -467,15 +734,15 @@ onUnmounted(() => {
   margin-left: 2px;
 }
 
-.arrow-up { color: #666; }
-.arrow-down { color: #999; }
+.arrow-up { color: #e53935; }
+.arrow-down { color: #009944; }
 
 .card-change {
   font-size: 14px;
   font-weight: 600;
 
-  &.up { color: #666; }
-  &.down { color: #999; }
+  &.up { color: #e53935; }
+  &.down { color: #009944; }
 }
 
 .card-grid {
@@ -499,14 +766,20 @@ onUnmounted(() => {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #333;
   line-height: 1.6;
+
+  &.up { color: #e53935; }
+  &.down { color: #009944; }
 
   &.time {
     font-size: 11px;
     font-weight: 400;
     color: #999;
   }
+}
+
+.stock-page.page-gray {
+  filter: grayscale(1);
 }
 
 .chart-placeholder {

@@ -61,6 +61,13 @@ export default defineStore('stock', {
       }
     },
 
+    /** 拖拽排序 */
+    moveWatchlistItem(fromIndex: number, toIndex: number) {
+      const item = this.watchlist.splice(fromIndex, 1)[0]
+      this.watchlist.splice(toIndex, 0, item)
+      setStorage('stockCode', this.watchlist.join(','))
+    },
+
     /** 更新实时行情 */
     updateRealtimeData(data: Record<string, StockData>) {
       this.realtimeData = { ...this.realtimeData, ...data }
