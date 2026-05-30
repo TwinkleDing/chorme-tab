@@ -11,7 +11,6 @@ declare module 'vue' {
     CandlestickChart: typeof import('./src/components/CandlestickChart.vue')['default']
     DeepSeek: typeof import('./src/components/DeepSeek.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
-    ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElForm: typeof import('element-plus/es')['ElForm']
     ElFormItem: typeof import('element-plus/es')['ElFormItem']
