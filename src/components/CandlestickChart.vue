@@ -236,10 +236,10 @@ function initChart() {
       timeStr = typeof data.time === 'string' ? data.time : String(data.time)
     }
     const maValues: string[] = []
+    // 查找当前数据点在原数组中的位置
+    const lookup = typeof data.time === 'number' ? data.time : timeStr
+    const idx = (props.data as any[]).findIndex(d => Number(d.time) === lookup || d.time === lookup)
     if (props.mas) {
-      // 查找该时间点的 MA 值（数字时间戳转字符串匹配）
-      const lookup = typeof data.time === 'number' ? data.time : timeStr
-      const idx = (props.data as any[]).findIndex(d => Number(d.time) === lookup || d.time === lookup)
       if (idx >= 0) {
         props.mas.forEach((period, mi) => {
           if (idx >= period - 1 && props.data.length > 0) {
@@ -265,7 +265,12 @@ function initChart() {
       high: data.high?.toFixed(3) ?? '-',
       low: data.low?.toFixed(3) ?? '-',
       close: data.close?.toFixed(3) ?? data.value?.toFixed(3),
-      change: data.open ? ((data.close - data.open) / data.open * 100).toFixed(2) + '%' : '--',
+      change: (() => {
+        const prevClose = idx > 0 ? props.data[idx - 1].close : 0
+        const curClose = data.close ?? data.value
+        if (prevClose && curClose != null) return ((curClose - prevClose) / prevClose * 100).toFixed(2) + '%'
+        return '--'
+      })(),
       volume: props.data.find(d => d.time === timeStr)?.volume !== undefined
         ? formatVolume(props.data.find(d => d.time === timeStr)!.volume!)
         : undefined,
@@ -291,7 +296,7 @@ watch(
   () => {
     if (chart) buildChart()
   },
-  { deep: true }
+  { deep: true, immediate: true }
 )
 
 onMounted(() => {

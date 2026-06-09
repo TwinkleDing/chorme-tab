@@ -1,252 +1,224 @@
-export default class Puzzle {
-	public static DEFAULT_COUNT = 0;
-	public static playing: boolean = false;
-	public static over: boolean = false;
-	public static img: string;
-	private count: number = Puzzle.DEFAULT_COUNT;
-	private time: number = Puzzle.DEFAULT_COUNT;
-	private timer: NodeJS.Timeout | string | number | undefined;
-	private tier: number = 3;
-	private width: number = 600;
-	private blockSize: number;
-	private blockList: Array<Block> = [];
-	private data: any = {};
-	private originalData: any = {};
-	private initData: boolean = true;
-	constructor(img: string, tier: number, width: number) {
-		Puzzle.img = img;
-		this.tier = tier || this.tier;
-		this.width = width || this.width;
-		this.blockSize = this.width / this.tier;
-		this.init();
-	}
-	/**
-	 * 初始化拼图
-	 */
-	private init(): void {
-		const itemLength: number = Math.pow(this.tier, 2);
-		for (let i = 0; i < this.tier; i++) {
-			for (let j = 0; j < this.tier; j++) {
-				const coordinate: [number, number] = [i * this.blockSize, j * this.blockSize];
-				const block: Block = new Block(i * this.tier + j + 1 !== itemLength, coordinate);
-				this.blockList.push(block);
-			}
-		}
-		this.setOriginalData();
-		this.setData();
-	}
-	/**
-	 * 停止拼图
-	 */
-	public end(): void {
-		clearInterval(this.timer);
-		Puzzle.playing = false;
-		this.setData();
-	}
-	/**
-	 * 重置拼图
-	 */
-	public reset(): void {
-		clearInterval(this.timer);
-		this.count = Puzzle.DEFAULT_COUNT;
-		this.time = Puzzle.DEFAULT_COUNT;
-		Puzzle.playing = false;
-		Puzzle.over = false;
-		this.blockList.forEach((item: Block, index: number) => {
-			item.setRandom(item.getCoordinate());
-		});
-		this.setData();
-	}
-	/**
-	 * 开始游戏
-	 */
-	public start(): void {
-		if (Puzzle.playing) {
-			return;
-		}
-		this.randomBlock();
-		const startTime = new Date().getTime();
-		this.count = Puzzle.DEFAULT_COUNT;
-		this.timer = setInterval(() => {
-			this.time = new Date().getTime() - startTime;
-			this.setData();
-		}, 10);
-		Puzzle.playing = true;
-		Puzzle.over = false;
-		this.setData();
-	}
-	/**
-	 * 随机打乱方块
-	 */
-	private randomBlock(): void {
-		this.blockList.forEach((item: Block, i: number) => {
-			if (item.getIsImg()) {
-				const index = getRandom(0, this.blockList.length - 2, i);
-				const temp = [...item.getRandom()];
-				item.setRandom([...this.blockList[index].getRandom()]);
-				this.blockList[index].setRandom([...temp]);
-			}
-		});
-		function getRandom(min: number, max: number, i: number): number {
-			const r: number = Math.floor(Math.random() * (max + 1 - min) + min);
-			if (r !== i) {
-				return r;
-			} else {
-				return getRandom(min, max, i);
-			}
-		}
-	}
-	/**
-	 * 每一个块的点击事件，判断是改和哪个交换位置
-	 * @param item 每一个块
-	 */
-	public blockClick(item: Block): void {
-		if (!Puzzle.playing || Puzzle.over) return;
-		const [x, y] = item.getRandom();
-		// 定义四个方向的偏移量
-		const directions: [number, number][] = [
-			[-1, 0],
-			[1, 0],
-			[0, -1],
-			[0, 1],
-		];
-		for (const [dx, dy] of directions) {
-			const newX = x + dx * this.blockSize;
-			const newY = y + dy * this.blockSize;
-			this.emptyChange(newX, newY, item); // 复用原有逻辑
-		}
-	}
-	/**
-	 * 每次点击之后改变的内容
-	 * @param x 第几行
-	 * @param y 第几列
-	 * @param item 块的内容
-	 */
-	private emptyChange(x: number, y: number, item: Block): void {
-		const empty: Block = this.blockList[this.blockList.length - 1];
-		const coordinate: Array<number> = empty.getRandom();
-		if (x === coordinate[0] && y === coordinate[1]) {
-			const substitution: Array<number> = item.getRandom();
-			item.setRandom([coordinate[0], coordinate[1]]);
-			empty.setRandom(substitution);
-			this.count++;
-			this.hasOver();
-		}
-	}
-	/**
-	 * 是否结束游戏
-	 */
-	private hasOver(): void {
-		for (const item of this.blockList) {
-			const [cx, cy] = item.getCoordinate();
-			const [rx, ry] = item.getRandom();
-			if (cx !== rx || cy !== ry) {
-				Puzzle.over = false;
-				return;
-			}
-		}
-		Puzzle.over = true;
-		clearInterval(this.timer);
-	}
-	/**
-	 * 监听函数
-	 * @param cb
-	 */
-	public puzzleChange(cb: Function) {
-		const _self = this;
-		this.data = new Proxy(this.originalData, {
-			/**
-			 * @param {Object, Array} target 设置值的对象
-			 * @param {string} key 属性
-			 * @param {any} value 值
-			 * @param {Object} receiver this
-			 */
-			set: function (target, key, value, receiver) {
-				target[key] = value;
-				cb(_self);
-				return true;
-			},
-		});
-	}
-	/**
-	 * 每当有属性发生改变触发，为了触发监听函数
-	 */
-	private setData(): void {
-		if (this.initData) {
-			for (let key in this.originalData) {
-				this.data[key] = this.originalData[key];
-			}
-			this.initData = false;
-		} else {
-			for (let key in this.data) {
-				if (
-					typeof this.data[key] === "object" &&
-					this.data[key] !== null &&
-					this.data[key] !== undefined &&
-					this.data[key]?.toString() !== (this as any)[key].toString()
-				) {
-					this.data[key] = (this as any)[key];
-				} else if (this.data[key] !== (this as any)[key]) {
-					this.data[key] = (this as any)[key];
-				}
-			}
-		}
-	}
-	private setOriginalData(): void {
-		let obj: any = {};
-		for (let key in this) {
-			if (typeof this[key] !== "function") {
-				obj[key] = this[key];
-			}
-		}
-		this.originalData = obj;
-	}
+﻿/** 从 localStorage 读取最佳成绩 */
+function loadBest(tier: number): { time: number; steps: number } | null {
+  try {
+    const raw = localStorage.getItem(`puzzle_best_${tier}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
-	getOver(): boolean {
-		return Puzzle.over;
-	}
-	getImg(): string {
-		return Puzzle.img;
-	}
-	getItemSize(): number {
-		return this.blockSize;
-	}
-	getCount(): number {
-		return this.count;
-	}
-	getTime(): number {
-		return this.time;
-	}
-	getImageList(): readonly Block[] {
-		return this.blockList;
-	}
+function saveBest(tier: number, time: number, steps: number): void {
+  localStorage.setItem(`puzzle_best_${tier}`, JSON.stringify({ time, steps }));
+}
+
+export default class Puzzle {
+  private tier: number;
+  private width: number;
+  private blockSize: number;
+  private img: string;
+
+  public playing: boolean = false;
+  public over: boolean = false;
+
+  private count: number = 0;
+  private elapsed: number = 0;
+  private blockList: Block[] = [];
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private onChange: (() => void) | null = null;
+
+  public bestTime: number | null = null;
+  public bestSteps: number | null = null;
+
+  constructor(img: string, tier: number, width: number) {
+    this.img = img;
+    this.tier = tier || 3;
+    this.width = width || 600;
+    this.blockSize = this.width / this.tier;
+    const best = loadBest(this.tier);
+    this.bestTime = best?.time ?? null;
+    this.bestSteps = best?.steps ?? null;
+    this.init();
+  }
+
+  private init(): void {
+    const total = this.tier * this.tier;
+    this.blockList = [];
+    for (let i = 0; i < this.tier; i++) {
+      for (let j = 0; j < this.tier; j++) {
+        const coordinate: [number, number] = [i * this.blockSize, j * this.blockSize];
+        const isImg = i * this.tier + j + 1 !== total;
+        this.blockList.push(new Block(isImg, coordinate));
+      }
+    }
+    this.notify();
+  }
+
+  public end(): void {
+    this.clearTimer();
+    this.playing = false;
+    this.notify();
+  }
+
+  public reset(): void {
+    this.clearTimer();
+    this.playing = false;
+    this.over = false;
+    this.count = 0;
+    this.elapsed = 0;
+    this.blockList.forEach((item) => item.setRandom(item.getCoordinate()));
+    this.notify();
+  }
+
+  /** 模拟 N 次合法移动来打乱（保证可解） */
+  private randomBlock(shuffleMoves: number): void {
+    this.blockList.forEach((item) => item.setRandom(item.getCoordinate()));
+
+    const emptyIdx = this.blockList.length - 1;
+    const empty = this.blockList[emptyIdx];
+    let lastEmptyPos = [...empty.getRandom()];
+
+    for (let n = 0; n < shuffleMoves; n++) {
+      const [ex, ey] = empty.getRandom();
+      const neighbors = this.getNeighborBlocks(ex, ey, lastEmptyPos);
+      if (neighbors.length === 0) break;
+
+      const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
+      lastEmptyPos = [...empty.getRandom()];
+      const pickPos = [...pick.getRandom()];
+      pick.setRandom([ex, ey]);
+      empty.setRandom(pickPos as [number, number]);
+    }
+  }
+
+  private getNeighborBlocks(x: number, y: number, excludePos: number[]): Block[] {
+    const result: Block[] = [];
+    const directions: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    for (const [dx, dy] of directions) {
+      const nx = x + dx * this.blockSize;
+      const ny = y + dy * this.blockSize;
+      if (nx === excludePos[0] && ny === excludePos[1]) continue;
+      if (nx < 0 || ny < 0 || nx >= this.width || ny >= this.width) continue;
+      const found = this.blockList.find(
+        (b) => b.getRandom()[0] === nx && b.getRandom()[1] === ny
+      );
+      if (found) result.push(found);
+    }
+    return result;
+  }
+
+  public start(): void {
+    if (this.playing) return;
+
+    const shuffleCount = this.tier * this.tier * 20;
+    this.randomBlock(shuffleCount);
+
+    this.count = 0;
+    this.elapsed = 0;
+    this.playing = true;
+    this.over = false;
+
+    const startTime = Date.now();
+    this.timer = setInterval(() => {
+      this.elapsed = Date.now() - startTime;
+      this.notify();
+    }, 50);
+
+    this.notify();
+  }
+
+  public blockClick(item: Block): void {
+    if (!this.playing || this.over) return;
+    const [x, y] = item.getRandom();
+    const directions: [number, number][] = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+    const empty = this.blockList[this.blockList.length - 1];
+    const [ex, ey] = empty.getRandom();
+
+    for (const [dx, dy] of directions) {
+      if (x + dx * this.blockSize === ex && y + dy * this.blockSize === ey) {
+        empty.setRandom([x, y]);
+        item.setRandom([ex, ey]);
+        this.count++;
+        this.checkWin();
+        this.notify();
+        return;
+      }
+    }
+  }
+
+  private checkWin(): void {
+    for (const item of this.blockList) {
+      const [cx, cy] = item.getCoordinate();
+      const [rx, ry] = item.getRandom();
+      if (cx !== rx || cy !== ry) return;
+    }
+    this.over = true;
+    this.clearTimer();
+    const prev = loadBest(this.tier);
+    if (!prev || this.elapsed < prev.time || (this.elapsed === prev.time && this.count < prev.steps)) {
+      saveBest(this.tier, this.elapsed, this.count);
+      this.bestTime = this.elapsed;
+      this.bestSteps = this.count;
+    }
+  }
+
+  public destroy(): void {
+    this.clearTimer();
+  }
+
+  private clearTimer(): void {
+    if (this.timer !== null) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
+
+  private notify(): void {
+    if (this.onChange) this.onChange();
+  }
+
+  public puzzleChange(cb: (puzzle: Puzzle) => void): void {
+    this.onChange = () => cb(this);
+  }
+
+  getTier(): number { return this.tier; }
+  getImg(): string { return this.img; }
+  getItemSize(): number { return this.blockSize; }
+  getCount(): number { return this.count; }
+  getElapsed(): number { return this.elapsed; }
+  getBlockList(): readonly Block[] { return this.blockList; }
+  getEmptyBlock(): Block { return this.blockList[this.blockList.length - 1]; }
+  getBestTime(): number | null { return this.bestTime; }
+  getBestSteps(): number | null { return this.bestSteps; }
+  getPlaying(): boolean { return this.playing; }
+  getOver(): boolean { return this.over; }
+
+  public moveDirection(dx: number, dy: number): void {
+    if (!this.playing || this.over) return;
+    const empty = this.blockList[this.blockList.length - 1];
+    const [ex, ey] = empty.getRandom();
+    const tx = ex + dx * this.blockSize;
+    const ty = ey + dy * this.blockSize;
+    const target = this.blockList.find(
+      (b) => b.getIsImg() && b.getRandom()[0] === tx && b.getRandom()[1] === ty
+    );
+    if (target) this.blockClick(target);
+  }
 }
 
 export class Block {
-	private isImg: boolean;
-	private coordinate: Array<number> | [0, 0];
-	private random: Array<number> | [0, 0];
-	constructor(isImg: boolean, coordinate: [number, number]) {
-		this.isImg = isImg;
-		this.coordinate = coordinate;
-		this.random = coordinate;
-	}
-	setIsImg(value: boolean): void {
-		this.isImg = value;
-	}
-	getIsImg(): boolean {
-		return this.isImg;
-	}
-	setCoordinate(coordinate: Array<number>): void {
-		this.coordinate = coordinate;
-	}
-	getCoordinate(): Array<number> {
-		return this.coordinate;
-	}
-	setRandom(random: Array<number>) {
-		this.random = random;
-	}
-	getRandom(): Array<number> {
-		return this.random;
-	}
+  private readonly isImg: boolean;
+  private readonly coordinate: [number, number];
+  private random: [number, number];
+
+  constructor(isImg: boolean, coordinate: [number, number]) {
+    this.isImg = isImg;
+    this.coordinate = coordinate;
+    this.random = coordinate;
+  }
+
+  getIsImg(): boolean { return this.isImg; }
+  getCoordinate(): [number, number] { return this.coordinate; }
+  getRandom(): [number, number] { return this.random; }
+  setRandom(random: [number, number]): void { this.random = random; }
 }

@@ -383,8 +383,6 @@ async function addStock() {
 /** 选中股票 - 加载K线 */
 async function onSelectStock(code: string) {
   stockStore.selectStock(code)
-  const data = await fetchKline(code, chartPeriod.value, chartDays.value)
-  stockStore.setKlineData(data)
 }
 
 let watchStop: (() => void) | null = null
