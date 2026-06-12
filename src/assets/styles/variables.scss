@@ -1,0 +1,22 @@
+// 设计令牌 — 统一颜色、尺寸等变量
+
+// ===== 股票涨跌颜色 =====
+$color-up: #e53935;
+$color-down: #009944;
+
+// ===== 背景 / 遮罩 =====
+$color-overlay: #00000033;
+$color-shadow: #00000080;
+
+// ===== 文字颜色 =====
+$color-text-light: #fff;
+$color-text-muted: #bbb;
+$color-text-dim: #999;
+$color-text: #333;
+
+// ===== 主题色 =====
+$color-primary: #1890ff;
+$color-primary-light: #e6f7ff;
+
+// ===== K线配色 =====
+$ma-colors: #f59e0b, #8b5cf6, #06b6d4, #f97316;

@@ -1,13 +1,13 @@
 # 二丁果然 - Chrome 新标签页扩展
 
-一个功能丰富的 Chrome 浏览器新标签页扩展，提供可定制的启动页，集成了搜索、AI 聊天、绘画、小说阅读和拼图游戏等功能。
+一个功能丰富的 Chrome 浏览器新标签页扩展，提供可定制的启动页，集成了搜索、绘画、小说阅读、股票看板和拼图游戏等功能。
 
 ## 技术栈
 
 | 层级 | 技术 |
 |------|------|
-| 语言 | TypeScript / JavaScript |
-| 框架 | Vue 3 (Composition API) |
+| 语言 | TypeScript |
+| 框架 | Vue 3 (Composition API + `<script setup>`) |
 | 构建 | Vite 4 |
 | UI | Element Plus 2.11 |
 | 状态管理 | Pinia 2 |
@@ -21,60 +21,83 @@
 - **自定义背景** — 13 张图片，支持滚轮缩放（以鼠标为中心）、拖动定位、键盘控制（上下箭头切换图片，左右箭头切换适配模式，WASD 微移）
 - **双模式显示** — 全屏单图模式和网格平铺模式
 - **搜索栏** — 输入 `www.` 开头直接打开 URL，否则百度搜索
-- **书签** — 快速访问百度、有道翻译、DeepSeek、故事、绘画、拼图等，可折叠可拖动
-- **AI 聊天** — 集成 DeepSeek API 的智能对话，聊天记录持久化到 localStorage
+- **书签** — 快速访问百度、有道翻译、故事、绘画、拼图等，可折叠可拖动
 - **实时股票** — 从腾讯金融 API 获取 A 股行情，每秒刷新，红涨绿跌
-- **翻页时钟** — 数字翻页样式时间显示
+
+### 数据看板 (/stock)
+K线图页面 — 使用 lightweight-charts，支持日K/5分钟图、MA 均线、成交量、拖拽排序、实时数据浮层卡片、全页灰度。
 
 ### 绘画 (/draw)
-Canvas 2D 绘画工具，支持背景图片叠加、颜色选择、画笔宽度调节、多种线帽样式、撤销/重做。
+Canvas 2D 绘画工具，支持背景图片叠加、颜色选择、画笔宽度调节、多种线帽样式、撤销/重做、导出 PNG。
 
 ### 小说阅读器 (/story)
-加载本地 .txt/.md 文件，渲染为格式化文本。
+加载本地 .txt 文件，渲染为格式化文本。
 
 ### 拼图游戏 (/puzzle)
-3x3 滑块拼图，基于当前背景图片，步数计数和计时器。
+3×3 / 4×4 / 5×5 滑块拼图，基于当前背景图片，步数计数和计时器，本地最佳成绩。
 
 ## 项目结构
 
 ```
 src/
-├── main.js                    # 入口
-├── App.vue                    # 根组件
-├── router/index.js            # 路由 (/ /draw /story /puzzle)
-├── store/
-│   ├── index.js               # Pinia store 创建
-│   ├── img.ts                 # 背景图片 store
-│   └── ai.ts                  # AI 聊天 store
+├── main.js                     # 入口
+├── App.vue                     # 根组件
+├── router/index.js             # 路由
+├── stores/                     # Pinia store
+│   ├── index.ts                # Pinia 实例
+│   ├── background.ts           # 背景图片状态
+│   └── stock.ts                # 股票状态
+├── composables/                # Vue 组合式函数
+│   ├── useMouseEvent.ts        # 拖拽
+│   ├── useBackground.ts        # 背景缩放/移动
+│   ├── useKlineData.ts         # K线数据获取
+│   └── useStockRealtime.ts     # 实时股票行情
+├── config/                     # 配置数据
+│   ├── images.ts               # 背景图列表
+│   └── bookmarks.ts            # 书签列表
 ├── utils/
-│   ├── index.ts               # localStorage 工具
-│   └── constant.ts            # 常量
-├── hooks/
-│   └── useMouseEvent.ts       # 拖拽 composable
+│   ├── storage.ts              # localStorage 封装
+│   ├── date.ts                 # 日期格式化
+│   └── constants.ts            # 常量
+├── types/
+│   └── stock.ts                # 股票类型定义
 ├── assets/
-│   ├── css/index.scss         # 全局样式
-│   └── image/                 # 图标资源
+│   ├── css/index.scss          # 全局样式
+│   ├── styles/variables.scss   # 设计令牌
+│   └── image/                  # 图标资源
 ├── components/
-│   ├── Back.vue               # 返回首页
-│   ├── DeepSeek.vue           # AI 聊天
-│   ├── Grid.vue               # 背景模式切换
-│   ├── ImgList.vue            # 缩略图选择
-│   ├── Options.js             # 常量配置
-│   ├── StockList.vue          # 股票行情
-│   └── TimeClock.vue          # 时钟
+│   ├── Grid.vue                # 背景模式切换
+│   ├── ImgList.vue             # 缩略图选择
+│   ├── CandlestickChart.vue    # K线图
+│   ├── Watchlist.vue           # 自选股列表（拖拽排序）
+│   └── shared/
+│       └── BackButton.vue      # 返回首页按钮
 └── views/
-    ├── home/index.vue         # 主页
-    ├── draw/index.vue         # 绘画
-    ├── story/index.vue        # 小说阅读
-    ├── puzzle/index.vue       # 拼图游戏
-    └── puzzle/puzzle.ts       # 拼图逻辑
+    ├── home/
+    │   ├── index.vue           # 主页父组件
+    │   └── components/         # 主页子组件
+    │       ├── BackgroundView.vue
+    │       ├── SearchBar.vue
+    │       ├── BookmarkList.vue
+    │       └── StockTicker.vue
+    ├── stock/
+    │   ├── index.vue           # 股票页面父组件
+    │   └── components/         # 股票页面子组件
+    │       ├── StockHeader.vue
+    │       ├── ChartToolbar.vue
+    │       └── RealtimeCard.vue
+    ├── draw/index.vue          # 绘画
+    ├── story/index.vue         # 小说阅读
+    └── puzzle/
+        ├── index.vue           # 拼图游戏
+        └── puzzle.ts           # 拼图逻辑类
 
 public/
-├── manifest.json              # Chrome 扩展 manifest
-├── img/bg/                    # 背景图片
-├── img/bg-thumbnail/          # 缩略图
-├── img/bg-grid/               # 网格裁剪
-└── story/                     # 小说文件
+├── manifest.json               # Chrome 扩展 manifest
+├── img/bg/                     # 背景图片
+├── img/bg-thumbnail/           # 缩略图
+├── img/bg-grid/                # 网格裁剪
+└── story/                      # 小说文件
 ```
 
 ## 开发
@@ -113,7 +136,4 @@ yarn preview
 | v1.0.9 | 绘画、小说阅读、游戏页 |
 | v1.0.10 | WASD 移动背景 |
 | v1.0.11 | 拼图游戏 |
-
-## 安全注意
-
-`src/components/DeepSeek.vue` 中硬编码了 DeepSeek API 密钥，建议迁移到环境变量或后端代理。
+| v2.0.0 | 重构 — 拆分大组件、统一 TS、消除重复、目录重组 |

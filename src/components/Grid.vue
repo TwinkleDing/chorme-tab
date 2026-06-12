@@ -1,35 +1,28 @@
-<!--
- * @Author: twinkleding
- * @Date: 2024-11-20 09:49:56
- * @LastEditTime: 2024-11-29 09:39:22
- * @LastEditors: twinkleding
- * @FilePath: \chorme-tab\src\components\Grid.vue
- * @Description: 
--->
 <template>
   <div class="grid">
     <el-icon>
-      <PictureFilled v-if="modeActive == GRID_SCREEN" @click="setMode(FULL_SCREEN)" />
-      <Grid v-if="modeActive == FULL_SCREEN" @click="setMode(GRID_SCREEN)" />
+      <PictureFilled v-if="modeActive === GRID_SCREEN" @click="setMode(FULL_SCREEN)" />
+      <Grid v-if="modeActive === FULL_SCREEN" @click="setMode(GRID_SCREEN)" />
     </el-icon>
   </div>
 </template>
+
 <script setup lang="ts">
-import { ref } from "vue";
-import { PictureFilled, Grid } from "@element-plus/icons-vue";
-import useImgStore from "@/store/img";
-import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
+import { ref } from 'vue'
+import { PictureFilled, Grid } from '@element-plus/icons-vue'
+import useBackgroundStore from '@/stores/background'
+import { FULL_SCREEN, GRID_SCREEN } from '@/utils/constants'
 
-const imgStore = useImgStore();
-const emit = defineEmits(["setMode"]);
+const store = useBackgroundStore()
+const emit = defineEmits<{ setMode: [mode: string] }>()
 
-const modeActive = ref<string>(imgStore.getBgMode);
+const modeActive = ref<string>(store.getBgMode)
 
-const setMode = (mode: string): void => {
-  modeActive.value = mode;
-  imgStore.setBgMode(mode);
-  emit("setMode", mode);
-};
+function setMode(mode: string) {
+  modeActive.value = mode
+  store.setBgMode(mode)
+  emit('setMode', mode)
+}
 </script>
 
 <style scoped lang="scss">
@@ -39,8 +32,6 @@ const setMode = (mode: string): void => {
   top: 0;
   color: #aaaaaa88;
   font-size: 24px;
-  :deep(.el-icon) {
-    cursor: pointer;
-  }
+  :deep(.el-icon) { cursor: pointer; }
 }
 </style>

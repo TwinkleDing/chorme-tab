@@ -1,77 +1,39 @@
-<!--
- * @Author: twinkle-ding
- * @Date: 2024-11-12 11:06:04
- * @LastEditTime: 2024-12-02 19:45:52
- * @LastEditors: twinkle-ding
- * @FilePath: \chorme-tab\src\views\home\index.vue
- * @Description: 
--->
 <template>
   <div class="home" ref="home" @mousemove="pageMove">
-    <div
-      id="page"
-      ref="page"
-      @mousewheel="mousewheel"
+    <BackgroundView
+      ref="bgView"
+      :bg-mode="bgMode"
+      :bg-index="bgIndex"
+      :size-index="sizeIndex"
+      @wheel="onMouseWheel"
       @mousedown="domMouseDown"
       @mouseup="domMouseUp"
+      @mouseout="domMouseOut"
       @dblclick="resetBg"
-    >
-      <img
-        v-if="bgMode === FULL_SCREEN"
-        :src="pageBgImgList[bgIndex]"
-        :style="bgSizeList[sizeIndex]"
-        draggable="false"
-        @mouseout="domMouseOut"
-      />
-      <div v-if="bgMode === GRID_SCREEN" id="page-bg-box">
-        <div
-          v-for="item in pageGridImgList"
-          :style="{
-            backgroundImage: `url(${item})`,
-          }"
-          @mouseout="domMouseOut"
-        ></div>
-      </div>
-    </div>
-    <!-- <TimeClock /> -->
+    />
+
     <div
       id="box"
       ref="box"
-      :class="['box', !boxUnfold && 'box-fold']"
+      :class="['box']"
       @mousedown="domMouseDown"
       @mouseup="domMouseUp"
       @mouseout="domMouseOut"
     >
       <div class="nav">
         <span style="margin-right: 5px">{{ currentTime }}</span>
-        <div @click="toggleStockList" style="margin-left: 10px">
-          <el-icon v-if="showStockList">
-            <Hide style="position: relative; top: 2px" />
-          </el-icon>
-          <el-icon v-else size="20">
-            <TrendCharts style="position: relative; top: 4px" />
-          </el-icon>
+        <div @click="toggleStockList" style="margin-left: 10px; cursor: pointer">
+          <el-icon v-if="showStockList"><Hide style="position: relative; top: 2px" /></el-icon>
+          <el-icon v-else size="20"><TrendCharts style="position: relative; top: 4px" /></el-icon>
         </div>
       </div>
-      <StockList v-show="showStockList" />
-      <deep-seek v-show="isAI" />
-      <div v-show="!isAI">
-        <div class="search-input">
-          <input
-            v-model="searchValue"
-            ref="input"
-            placeholder="搜索..."
-            type="text"
-            @keyup.enter.native="enter"
-          />
-        </div>
-        <div id="book" class="book">
-          <div class="book-item" v-for="item in bookList" @click="goBook(item.href)">
-            <img :src="item.icon" alt="" draggable="false" />
-            <div class="book-title">{{ item.title }}</div>
-          </div>
-        </div>
-        <div class="boxUnfold" @click="setUnfold">
+
+      <StockTicker v-show="showStockList" :data="stockData" :codes="stockCodes" />
+
+      <div>
+        <SearchBar />
+        <BookmarkList :items="bookList" :unfolded="boxUnfold" />
+        <div class="boxUnfold" @click="toggleUnfold">
           <el-icon>
             <TopLeft v-if="boxUnfold" />
             <BottomRight v-else />
@@ -79,391 +41,154 @@
         </div>
       </div>
     </div>
-    <img-list v-if="bgMode == FULL_SCREEN" />
-    <grid @set-mode="setMode" />
+
+    <ImgList v-if="bgMode === FULL_SCREEN" />
+    <Grid @set-mode="onSetMode" />
   </div>
 </template>
+
 <script setup lang="ts">
-import { dateFormat } from "@/utils";
-import useImgStore from "@/store/img";
-import Grid from "@/components/Grid.vue";
-import ImgList from "@/components/ImgList.vue";
-import DeepSeek from "@/components/DeepSeek.vue";
-import StockList from "@/components/StockList.vue";
-import useMouseEvent from "@/hooks/useMouseEvent";
-import TimeClock from "@/components/TimeClock.vue";
-import { ref, watch, onMounted, reactive, onUnmounted } from "vue";
-import { setStorage, getStorage } from "@/utils";
-import { FULL_SCREEN, GRID_SCREEN } from "@/utils/constant";
-import { TopLeft, BottomRight, Hide, TrendCharts } from "@element-plus/icons-vue";
-import {
-  PageBgImgList,
-  PageGridImgList,
-  BgSizeList,
-  BookList,
-} from "@/components/Options.js";
+import { ref, watch, onMounted, onUnmounted, reactive } from 'vue'
+import { dateFormat } from '@/utils/date'
+import { setStorage, getStorage } from '@/utils/storage'
+import { FULL_SCREEN } from '@/utils/constants'
+import { BookList } from '@/config/bookmarks'
+import { BgSizeList } from '@/config/images'
+import { TopLeft, BottomRight, Hide, TrendCharts } from '@element-plus/icons-vue'
 
-const BgMinWidth = 800;
-const MouseWheelRatio = 1.1;
-const imgStore = useImgStore();
-const { mouseDown, mouseMove, mouseUp, mouseOut } = useMouseEvent();
-const {
-  getBgIndex,
-  setBgIndex,
-  getSizeIndex,
-  setSizeIndex,
-  getBoxUnfold,
-  setBoxUnfold,
-  getBgMode,
-  getBgW,
-  setBgW,
-  getBgH,
-  setBgH,
-  getBgX,
-  setBgX,
-  getBgY,
-  setBgY,
-  getSearchX,
-  setSearchX,
-  getSearchY,
-  setSearchY,
-} = imgStore;
-let mouseTimer: any = null;
-const box = ref<HTMLElement>();
-const page = ref<HTMLElement>();
-const isAI = ref<boolean>(false);
-const searchValue = ref<string>("");
-const bgMode = ref<string>(getBgMode);
-const bgSizeList = reactive(BgSizeList);
-const bgIndex = ref<number>(getBgIndex);
-const controlDown = ref<boolean>(false);
-const bookList = ref<Array<any>>(BookList);
-const sizeIndex = ref<number>(getSizeIndex);
-const boxUnfold = ref<boolean>(getBoxUnfold);
-const pageBgImgList = reactive(PageBgImgList);
-const pageGridImgList = reactive(PageGridImgList);
-const currentTime = ref<string>(dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss"));
-let mouseDownTimer: any = null;
-const showStockList = ref<boolean>(String(getStorage('showStockList')) !== 'false');
+import useBackgroundStore from '@/stores/background'
+import { useMouseEvent } from '@/composables/useMouseEvent'
+import { useBackground } from '@/composables/useBackground'
+import { useStockRealtime } from '@/composables/useStockRealtime'
 
-/**
- * 切换股票列表显示/隐藏
- */
-const toggleStockList = (): void => {
-  showStockList.value = !showStockList.value;
-  setStorage('showStockList', showStockList.value);
-};
+import BackgroundView from './components/BackgroundView.vue'
+import SearchBar from './components/SearchBar.vue'
+import BookmarkList from './components/BookmarkList.vue'
+import StockTicker from './components/StockTicker.vue'
+import Grid from '@/components/Grid.vue'
+import ImgList from '@/components/ImgList.vue'
 
-/**
- * 鼠标按下事件
- * @param e 鼠标事件
- */
-const domMouseDown = (e: MouseEvent): void => {
-  mouseDown(e);
+const store = useBackgroundStore()
+const { mouseDown, mouseMove, mouseUp, mouseOut } = useMouseEvent()
+const { data: stockData, startPolling, stopPolling } = useStockRealtime()
+const stockCodes = (getStorage('stockCode') || 'sh515080').split(',').filter(Boolean)
+
+const home = ref<HTMLElement>()
+const box = ref<HTMLElement>()
+const bgView = ref<InstanceType<typeof BackgroundView>>()
+
+const { bgIndex, sizeIndex, bgMode, initBg, resetBg, onMouseWheel, changeImage, nudge: _nudge } =
+  useBackground(() => bgView.value?.pageEl)
+
+const bookList = reactive(BookList)
+const bgSizeList = reactive(BgSizeList)
+const boxUnfold = ref(store.getBoxUnfold)
+const showStockList = ref(String(getStorage('showStockList')) !== 'false')
+const currentTime = ref(dateFormat(new Date(), 'yyyy-MM-dd hh:mm:ss'))
+
+let mouseDownTimer: ReturnType<typeof setTimeout> | null = null
+let controlDown = false
+let timeInterval: ReturnType<typeof setInterval> | null = null
+
+// ---- stock ticker ----
+function toggleStockList() {
+  showStockList.value = !showStockList.value
+  setStorage('showStockList', showStockList.value)
+}
+
+// ---- drag ----
+function domMouseDown(e: MouseEvent) {
+  mouseDown(e)
   if (box.value?.contains(e.target as Node)) {
-    mouseDownTimer = setTimeout(() => {
-      setBoxBgColor("#00000033");
-    }, 100);
+    mouseDownTimer = setTimeout(() => { box.value!.style.backgroundColor = '#00000033' }, 100)
   }
-};
-/**
- * 鼠标松开事件
- * @param e 鼠标事件
- */
-const domMouseUp = (e: MouseEvent): void => {
-  mouseUp();
-  if (mouseDownTimer) {
-    clearTimeout(mouseDownTimer); // 清除定时器
-    mouseDownTimer = null;
-  }
+}
+function domMouseUp(e: MouseEvent) {
+  mouseUp()
+  if (mouseDownTimer) { clearTimeout(mouseDownTimer); mouseDownTimer = null }
+  if (box.value?.contains(e.target as Node)) box.value.style.backgroundColor = 'transparent'
+}
+function domMouseOut(e: MouseEvent) {
+  mouseOut()
+  if (box.value?.contains(e.target as Node)) box.value.style.backgroundColor = 'transparent'
+}
+
+function pageMove(e: MouseEvent) {
   if (box.value?.contains(e.target as Node)) {
-    setBoxBgColor("transparent");
+    const pos = mouseMove(e, box.value)
+    if (pos) { store.setSearchX(pos.left); store.setSearchY(pos.top) }
+  } else if (bgView.value?.pageEl?.contains(e.target as Node)) {
+    const pos = mouseMove(e, bgView.value.pageEl)
+    if (pos) { store.setBgX(pos.left); store.setBgY(pos.top) }
   }
-};
-/**
- * 鼠标移出事件
- * @param e 鼠标事件
- */
-const domMouseOut = (e: MouseEvent): void => {
-  mouseOut();
-  if (box.value?.contains(e.target as Node)) {
-    setBoxBgColor("transparent");
-  }
-};
-/**
- * 设置盒子背景颜色
- * @param color 背景颜色
- */
-const setBoxBgColor = (color: string): void => {
-  if (box.value) {
-    box.value.style.backgroundColor = color;
-  }
-};
+}
 
-/**
- * 页面移动事件
- * @param e 鼠标事件
- */
-const pageMove = (e: MouseEvent): void => {
-  if (box.value?.contains(e.target as Node)) {
-    const position = mouseMove(e, box.value);
-    if (position) {
-      setSearchX(position.left);
-      setSearchY(position.top);
-    }
-  } else if (page.value.contains(e.target as Node)) {
-    const position = mouseMove(e, page.value);
-    if (position) {
-      setBgX(position.left);
-      setBgY(position.top);
-    }
-  }
-};
-/**
- * 跳转书签
- * @param path 书签路径
- */
-const goBook = (path: string): void => {
-  if (/^https?:\/\/[^\s]+$/.test(path)) {
-    window.open(path);
-  } else {
-    window.open(window.location.href + path);
-  }
-};
-/**
- * 搜索事件
- */
-const enter = async (): Promise<void> => {
-  if (searchValue.value.startsWith("www.")) {
-    window.open("http://" + searchValue.value);
-  } else {
-    window.open("http://www.baidu.com/s?wd=" + searchValue.value);
-    searchValue.value = "";
-  }
-};
-/**
- * 鼠标滚轮缩放背景图
- * @param e 鼠标事件
- */
-const mousewheel = (e: WheelEvent): void => {
-  if (controlDown.value) return;
-  const reg1 = /[^0-9|.]/gi;
-  const reg2 = /[^-0-9|.]/gi;
-  const bgWidth =
-    Number(page.value.style.width.replace(reg1, "")) || page.value.clientWidth;
-  const bgHeight =
-    Number(page.value.style.height.replace(reg1, "")) || page.value.clientHeight;
-  let width = Number(bgWidth);
-  let height = Number(bgHeight);
-  if (width < BgMinWidth && e.deltaY > 0) return;
-  if (e.deltaY < 0) {
-    width *= MouseWheelRatio;
-    height *= MouseWheelRatio;
-  } else {
-    width /= MouseWheelRatio;
-    height /= MouseWheelRatio;
-  }
-  page.value.style.width = width + "px";
-  page.value.style.height = height + "px";
-  setBgW(page.value.style.width);
-  setBgH(page.value.style.height);
+function toggleUnfold() {
+  boxUnfold.value = !boxUnfold.value
+  store.setBoxUnfold(boxUnfold.value)
+}
 
-  const bgLeft = Number(page.value.style.left.replace(reg2, "")) || 0;
-  const bgTop = Number(page.value.style.top.replace(reg2, "")) || 0;
-  page.value.style.left = `${bgLeft - ((e.layerX / bgWidth) * width - e.layerX)}px`;
-  page.value.style.top = `${bgTop - ((e.layerY / bgHeight) * height - e.layerY)}px`;
-  setBgX(page.value.style.left);
-  setBgY(page.value.style.top);
-};
-/**
- * 切换背景图片
- * @param type 切换类型 1: 下一张 -1: 上一张
- */
-const bgChange = (type: number): void => {
-  if (mouseTimer || controlDown.value) {
-    return;
-  }
-  mouseTimer = setTimeout(() => {
-    const maxIndex = pageBgImgList.length - 1;
-    let index = bgIndex.value;
-    index =
-      type > 0 ? (index >= maxIndex ? 0 : index + 1) : index <= 0 ? maxIndex : index - 1;
-    setBgIndex(index);
-    bgIndex.value = index;
-    clearTimeout(mouseTimer);
-    mouseTimer = null;
-  }, 300);
-};
-/**
- * 按下上下键盘切换背景图
- * @param e 键盘事件
- */
-const bgSrcChange = (e: KeyboardEvent): void => {
-  if (e.key === "ArrowUp") {
-    bgChange(-1);
-  }
-  if (e.key === "ArrowDown") {
-    bgChange(1);
-  }
-};
-/**
- * 按左右键切换背景图的契合度
- * @param e 键盘事件
- */
-const bgSizeChange = (e: KeyboardEvent): void => {
-  let index = sizeIndex.value;
-  if (e.key === "ArrowLeft") {
-    index--;
-    if (index < 0) {
-      index = bgSizeList.length - 1;
-    }
-    sizeIndex.value = index;
-    resetBg();
-    setSizeIndex(index);
-  }
-  if (e.key === "ArrowRight") {
-    index++;
-    if (index > bgSizeList.length - 1) {
-      index = 0;
-    }
-    sizeIndex.value = index;
-    resetBg();
-    setSizeIndex(index);
-  }
-};
-/**
- *
- * @param axis 轴
- * @param value 移动值
- * @param setter  setter函数
- */
-const updatePosition = (
-  axis: "top" | "left",
-  value: number,
-  setter: (val: string) => void
-): void => {
-  const current = parseInt(page.value.style[axis] || "0");
-  page.value.style[axis] = `${current + value}px`;
-  setter(page.value.style[axis]);
-};
+function onSetMode() {
+  resetBg()
+}
 
-/**
- * 按w|a|s|d移动背景图位置
- * @param e 键盘事件
- */
-const bgPositionChange = (e: KeyboardEvent): void => {
-  const key: string = e.key.toLocaleLowerCase();
-  if (key === "w") updatePosition("top", -1, setBgY);
-  if (key === "a") updatePosition("left", -1, setBgX);
-  if (key === "s") updatePosition("top", 1, setBgY);
-  if (key === "d") updatePosition("left", 1, setBgX);
-};
-/**
- * 监听键盘事件
- */
-const handleKeyDown = (e: KeyboardEvent): void => {
-  if (["Control", "Alt", "Meta", "Shift"].includes(e.key)) {
-    controlDown.value = true;
-  } else if (
-    bgMode.value == FULL_SCREEN &&
-    e.target instanceof HTMLElement &&
-    e.target.localName == "body"
-  ) {
-    bgSizeChange(e);
-    bgSrcChange(e);
-    bgPositionChange(e);
-  }
-};
-const handleKeyUp = (e: KeyboardEvent): void => {
-  if (e.key === "Control") {
-    controlDown.value = false;
-  }
-};
-/**
- * 初始化背景图位置和大小
- */
-const initBg = (): void => {
-  getBgW && (page.value.style.width = getBgW);
-  getBgH && (page.value.style.height = getBgH);
-  getBgX && (page.value.style.left = getBgX);
-  getBgY && (page.value.style.top = getBgY);
-};
-/**
- * 重置背景图位置和大小
- */
-const resetBg = (): void => {
-  page.value.style.width = "";
-  page.value.style.height = "";
-  page.value.style.left = "";
-  page.value.style.top = "";
-  setBgW("");
-  setBgH("");
-  setBgX("");
-  setBgY("");
-};
-/**
- * 初始化搜索框位置
- */
-const initBox = (): void => {
-  if (getSearchX !== null) {
-    box.value.style.left = getSearchX;
-    box.value.style.top = getSearchY;
-  }
-};
-/**
- * 获取当前时间
- */
-const getTime = (): void => {
-  setInterval(() => {
-    currentTime.value = dateFormat(new Date(), "yyyy-MM-dd hh:mm:ss");
-  }, 1000);
-};
-/**
- * 设置缩放
- */
-const setUnfold = (): void => {
-  boxUnfold.value = !boxUnfold.value;
-  setBoxUnfold(boxUnfold.value);
-};
-/**
- * 切换模式，单图还是栅格图
- */
-const setMode = (): void => {
-  resetBg();
-};
+function initBox() {
+  const sx = store.getSearchX
+  const sy = store.getSearchY
+  if (sx && box.value) box.value.style.left = sx
+  if (sy && box.value) box.value.style.top = sy
+}
 
-watch(
-  () => imgStore.bgIndex,
-  (e) => {
-    bgIndex.value = e;
+// ---- keyboard ----
+function handleKeyDown(e: KeyboardEvent) {
+  if (['Control', 'Alt', 'Meta', 'Shift'].includes(e.key)) {
+    controlDown = true
+  } else if (bgMode.value === FULL_SCREEN && (e.target as HTMLElement)?.localName === 'body') {
+    if (e.key === 'ArrowUp') changeImage(-1, 13)
+    if (e.key === 'ArrowDown') changeImage(1, 13)
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const dir = e.key === 'ArrowLeft' ? -1 : 1
+      let idx = sizeIndex.value + dir
+      if (idx < 0) idx = bgSizeList.length - 1
+      if (idx >= bgSizeList.length) idx = 0
+      sizeIndex.value = idx
+      store.setSizeIndex(idx)
+      resetBg()
+    }
+    if (e.key === 'w') _nudge(0, -1)
+    if (e.key === 'a') _nudge(-1, 0)
+    if (e.key === 's') _nudge(0, 1)
+    if (e.key === 'd') _nudge(1, 0)
   }
-);
-watch(
-  () => imgStore.sizeIndex,
-  (e) => {
-    sizeIndex.value = e;
-  }
-);
-watch(
-  () => imgStore.bgMode,
-  (e) => {
-    bgMode.value = e;
-  }
-);
+}
+function handleKeyUp(e: KeyboardEvent) {
+  if (e.key === 'Control') controlDown = false
+}
+
+// ---- lifecycle ----
 onMounted(() => {
-  initBg();
-  initBox();
+  initBg()
+  initBox()
 
-  getTime();
+  timeInterval = setInterval(() => {
+    currentTime.value = dateFormat(new Date(), 'yyyy-MM-dd hh:mm:ss')
+  }, 1000)
 
-  document.addEventListener("keydown", handleKeyDown);
-  document.addEventListener("keyup", handleKeyUp);
-});
+  startPolling(stockCodes, 1000)
+  document.addEventListener('keydown', handleKeyDown)
+  document.addEventListener('keyup', handleKeyUp)
+})
+
 onUnmounted(() => {
-  // 移除键盘事件监听器
-  document.removeEventListener("keydown", handleKeyDown);
-  document.removeEventListener("keyup", handleKeyUp);
-});
+  if (timeInterval) clearInterval(timeInterval)
+  stopPolling()
+  document.removeEventListener('keydown', handleKeyDown)
+  document.removeEventListener('keyup', handleKeyUp)
+})
+
+watch(() => store.bgIndex, (v) => { bgIndex.value = v })
+watch(() => store.sizeIndex, (v) => { sizeIndex.value = v })
+watch(() => store.bgMode, (v) => { bgMode.value = v })
 </script>
 
 <style lang="scss" scoped>
@@ -471,44 +196,6 @@ onUnmounted(() => {
   height: 100%;
   width: 100%;
   position: relative;
-}
-
-#page {
-  height: 100%;
-  width: 100%;
-  position: fixed;
-  left: 0;
-  top: 0;
-  color: #fff;
-  background-repeat: no-repeat;
-
-  &-bg {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 0;
-  }
-
-  &-bg-box {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 0;
-    height: 100%;
-    width: 100%;
-    // min-width: 1920px;
-    // min-height: 953px;
-    display: flex;
-    flex-wrap: wrap;
-    overflow: hidden;
-
-    div {
-      width: 25%;
-      height: 33.334%;
-      background-repeat: no-repeat;
-      background-position: 50% 50%;
-    }
-  }
 }
 
 .box {
@@ -530,56 +217,6 @@ onUnmounted(() => {
     height: 32px;
     line-height: 32px;
   }
-  .search-input {
-    width: 100%;
-    height: 40px;
-    margin-bottom: 20px;
-
-    input {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      outline: 0;
-      font-size: 18px;
-      padding: 0 20px;
-      border-radius: 20px;
-      box-sizing: border-box;
-      // background: #00000033;
-      background-color: transparent;
-      box-shadow: 0 0 10px #00000033;
-      color: #fff;
-
-      &::placeholder {
-        color: #fff;
-      }
-    }
-  }
-
-  .book {
-    display: inline-block;
-    height: 280px;
-    margin-bottom: 20px;
-
-    &-item {
-      display: inline-block;
-      text-align: center;
-      border-radius: 10%;
-      margin: 0 20px 15px;
-
-      img {
-        height: 80px;
-        width: 80px;
-        margin: 10px 0;
-      }
-    }
-
-    &-title {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-size: 16px;
-    }
-  }
 
   .boxUnfold {
     position: absolute;
@@ -589,29 +226,6 @@ onUnmounted(() => {
     font-weight: 700;
     color: #ffffff8a;
     cursor: pointer;
-  }
-}
-
-.box-fold {
-  .book {
-    height: 20px;
-    margin-bottom: 0;
-    position: relative;
-    top: -8px;
-
-    .book-item {
-      margin: 0 10px 0 0;
-
-      img {
-        height: 20px;
-        width: 20px;
-        margin: 0;
-      }
-
-      .book-title {
-        display: none;
-      }
-    }
   }
 }
 </style>
