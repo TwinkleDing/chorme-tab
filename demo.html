@@ -1,0 +1,20 @@
+﻿<html><head><title>自动化测试页面</title><style>
+body { font-family: sans-serif; padding: 40px; }
+h1 { color: #333; }
+button { padding: 12px 24px; font-size: 16px; cursor: pointer; margin: 5px; border-radius: 6px; border: none; color: white; }
+.btn1 { background: #4CAF50; }
+.btn2 { background: #2196F3; }
+.btn3 { background: #FF9800; }
+#output { margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 8px; min-height: 30px; }
+input { padding: 10px; font-size: 16px; margin: 10px 5px; border-radius: 6px; border: 1px solid #ccc; width: 250px; }
+</style></head><body>
+<h1>🤖 Chrome Tab 自动化演示</h1>
+<p>这个页面由 Codex 自动创建和控制。</p>
+<button class="btn1" onclick="document.getElementById('output').textContent='✅ 按钮1被点击！时间: '+new Date().toLocaleTimeString()">点击我 (按钮1)</button>
+<button class="btn2" onclick="document.getElementById('output').textContent='✅ 按钮2被点击！时间: '+new Date().toLocaleTimeString()">点击我 (按钮2)</button>
+<button class="btn3" onclick="document.getElementById('output').textContent='✅ 按钮3被点击！时间: '+new Date().toLocaleTimeString()">点击我 (按钮3)</button>
+<br>
+<input id="inputBox" placeholder="输入一些文字...">
+<button class="btn1" onclick="document.getElementById('output').textContent='📝 你输入了: '+document.getElementById('inputBox').value">提交输入</button>
+<div id="output"></div>
+</body></html>

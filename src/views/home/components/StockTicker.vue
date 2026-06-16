@@ -1,14 +1,14 @@
-<template>
+﻿<template>
   <div class="stock-ticker">
     <div v-for="(stock) in stockList" :key="stock.code" class="stock-row">
-      <span class="stock-name">{{ stock.name }}：</span>
-      <span>{{ stock.previousClose }}</span>
-      <span :class="stock.openPrice < stock.previousClose ? 'down' : 'up'"> ➡ </span>
-      <span>{{ stock.openPrice }}</span>
+      <span class="stock-name">{{ stock.name }}</span>
+      <span class="stock-price">{{ stock.previousClose }}</span>
+      <span :class="stock.openPrice < stock.previousClose ? 'down' : 'up'"> ▲</span>
+      <span class="stock-price">{{ stock.openPrice }}</span>
       <span :class="stock.current < stock.openPrice ? 'down' : 'up'">
-        {{ stock.current < stock.openPrice ? '⬇' : '⬆' }}
+        {{ stock.current < stock.openPrice ? '▼' : '▲' }}
       </span>
-      <span>{{ stock.current }}</span>
+      <span class="stock-price">{{ stock.current }}</span>
       <span :class="[parseFloat(stock.priceChangePercent) < 0 ? 'down' : 'up', 'change-percent']">
         {{ stock.priceChangePercent }}
       </span>
@@ -45,6 +45,11 @@ const stockList = computed(() =>
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.stock-price {
+  width: 40px;
+  display: inline-block;
 }
 
 .up { color: #e53935; }
