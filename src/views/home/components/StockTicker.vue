@@ -48,7 +48,7 @@ const stockList = computed(() =>
 }
 
 .stock-price {
-  width: 40px;
+  min-width: 40px;
   display: inline-block;
 }
 

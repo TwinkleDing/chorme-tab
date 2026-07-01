@@ -13,8 +13,8 @@
 	},
 	"content_scripts": [
 		{
-			"matches": ["https://*.twinkleding.top/*"],
-			"js": ["./js/index.js"]
+			"js": ["./js/index.js"],
+			"matches": ["<all_urls>"]
 		}
 	]
 }

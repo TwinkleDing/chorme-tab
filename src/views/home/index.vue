@@ -1,30 +1,18 @@
 <template>
   <div class="home" ref="home" @mousemove="pageMove">
-    <BackgroundView
-      ref="bgView"
-      :bg-mode="bgMode"
-      :bg-index="bgIndex"
-      :size-index="sizeIndex"
-      @wheel="onMouseWheel"
-      @mousedown="domMouseDown"
-      @mouseup="domMouseUp"
-      @mouseout="domMouseOut"
-      @dblclick="resetBg"
-    />
+    <BackgroundView ref="bgView" :bg-mode="bgMode" :bg-index="bgIndex" :size-index="sizeIndex" @wheel="onMouseWheel"
+      @mousedown="domMouseDown" @mouseup="domMouseUp" @mouseout="domMouseOut" @dblclick="resetBg" />
 
-    <div
-      id="box"
-      ref="box"
-      :class="['box']"
-      @mousedown="domMouseDown"
-      @mouseup="domMouseUp"
-      @mouseout="domMouseOut"
-    >
+    <div id="box" ref="box" :class="['box']" @mousedown="domMouseDown" @mouseup="domMouseUp" @mouseout="domMouseOut">
       <div class="nav">
-        <span style="margin-right: 5px">{{ currentTime }}</span>
+        <span style="display: inline-block; width: 150px; margin-right: 5px">{{ currentTime }}</span>
         <div @click="toggleStockList" style="margin-left: 10px; cursor: pointer">
-          <el-icon v-if="showStockList"><Hide style="position: relative; top: 2px" /></el-icon>
-          <el-icon v-else size="20"><TrendCharts style="position: relative; top: 4px" /></el-icon>
+          <el-icon v-if="showStockList">
+            <Hide style="position: relative; top: 2px" />
+          </el-icon>
+          <el-icon v-else size="20">
+            <TrendCharts style="position: relative; top: 4px" />
+          </el-icon>
         </div>
       </div>
 
