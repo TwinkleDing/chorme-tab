@@ -5,7 +5,7 @@
       <el-button size="small" :class="{ active: period === 'day' }" @click="$emit('update:period', 'day')">日K</el-button>
     </div>
     <div class="toolbar-group">
-      <el-button v-for="r in ranges" :key="r" size="small" :class="{ active: days === r }" @click="$emit('update:days', r)">{{ r }}日</el-button>
+      <el-button v-for="r in ranges" :key="r" size="small" :class="{ active: days === r }" @click="$emit('update:days', r)">{{ r }}{{ period === 'm5' ? '根' : '日' }}</el-button>
     </div>
     <div class="toolbar-group toolbar-ma">
       <label v-for="ma in maOptions" :key="ma" :class="{ active: activeMas.includes(ma) }" @click="$emit('toggleMA', ma)">

@@ -54,7 +54,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import useBackgroundStore from '@/stores/background'
-import { ElMessage } from 'element-plus'
 import Puzzle, { Block } from './puzzle'
 import { exampleImg, PageBgImgList } from '@/config/images'
 
@@ -112,6 +111,9 @@ function createPuzzle() {
       ElMessage.success(`恭喜！拼图完成！${fmtTime(p.getElapsed())} · ${p.getCount()}步`)
     }
   })
+
+  // 计时器只更新用时显示，不重建拼块列表
+  puzzle.timeChange(() => { elapsed.value = puzzle?.getElapsed() ?? 0 })
 }
 
 function init() {

@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onScopeDispose } from 'vue'
 import useBackgroundStore from '@/stores/background'
 
 const BgMinWidth = 800
@@ -11,6 +11,26 @@ export function useBackground(pageRef: () => HTMLElement | undefined) {
   const sizeIndex = ref(store.getSizeIndex)
   const bgMode = ref(store.getBgMode)
   let mouseTimer: ReturnType<typeof setTimeout> | null = null
+  let commitTimer: ReturnType<typeof setTimeout> | null = null
+
+  function persistBgGeometry() {
+    const page = pageRef()
+    if (!page) return
+    store.setBgW(page.style.width)
+    store.setBgH(page.style.height)
+    store.setBgX(page.style.left)
+    store.setBgY(page.style.top)
+  }
+
+  /** 延迟把几何信息提交到 store（store 写入会同步落 localStorage，
+   *  滚轮/连续按键每秒触发几十次，须在手势结束后提交一次） */
+  function commitBgGeometry(delay = 300) {
+    if (commitTimer) clearTimeout(commitTimer)
+    commitTimer = setTimeout(() => {
+      commitTimer = null
+      persistBgGeometry()
+    }, delay)
+  }
 
   /** 初始化背景位置/大小 */
   function initBg() {
@@ -24,6 +44,7 @@ export function useBackground(pageRef: () => HTMLElement | undefined) {
 
   /** 重置背景 */
   function resetBg() {
+    if (commitTimer) { clearTimeout(commitTimer); commitTimer = null }
     const page = pageRef()
     if (!page) return
     page.style.width = ''
@@ -60,15 +81,12 @@ export function useBackground(pageRef: () => HTMLElement | undefined) {
 
     page.style.width = `${width}px`
     page.style.height = `${height}px`
-    store.setBgW(page.style.width)
-    store.setBgH(page.style.height)
 
     const bgLeft = Number(page.style.left.replace(reg2, '')) || 0
     const bgTop = Number(page.style.top.replace(reg2, '')) || 0
     page.style.left = `${bgLeft - ((e.layerX / bgWidth) * width - e.layerX)}px`
     page.style.top = `${bgTop - ((e.layerY / bgHeight) * height - e.layerY)}px`
-    store.setBgX(page.style.left)
-    store.setBgY(page.style.top)
+    commitBgGeometry()
   }
 
   /** 切换背景图 */
@@ -93,14 +111,21 @@ export function useBackground(pageRef: () => HTMLElement | undefined) {
     const top = parseInt(page.style.top || '0')
     page.style.left = `${left + dx}px`
     page.style.top = `${top + dy}px`
-    store.setBgX(page.style.left)
-    store.setBgY(page.style.top)
+    commitBgGeometry()
   }
 
   // 同步 store 变化
   watch(() => store.bgIndex, (v) => { bgIndex.value = v })
   watch(() => store.sizeIndex, (v) => { sizeIndex.value = v })
   watch(() => store.bgMode, (v) => { bgMode.value = v })
+
+  onScopeDispose(() => {
+    if (mouseTimer) clearTimeout(mouseTimer)
+    if (commitTimer) {
+      clearTimeout(commitTimer)
+      persistBgGeometry()
+    }
+  })
 
   return {
     bgIndex, sizeIndex, bgMode,

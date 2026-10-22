@@ -61,7 +61,7 @@
             :mas="activeMas"
           />
           <div v-else-if="stockStore.selectedCode" class="chart-placeholder">
-            {{ klineLoading ? '加载K线数据中...' : '暂无K线数据' }}
+            {{ stockStore.klineLoading ? '加载K线数据中...' : klineError || '暂无K线数据' }}
           </div>
           <div v-else class="chart-placeholder">请从左侧自选列表中选择一只股票</div>
         </div>
@@ -87,13 +87,13 @@ import { useKlineData } from '@/composables/useKlineData'
 import { useStockRealtime } from '@/composables/useStockRealtime'
 
 const stockStore = useStockStore()
-const { fetchKline, loading: klineLoading } = useKlineData()
+const { fetchKline, error: klineError } = useKlineData()
 const { data: rtData, startPolling, stopPolling } = useStockRealtime()
 
-// 实时数据同步到 store
+// 实时数据同步到 store（data 每轮整体替换，无需 deep）
 watch(rtData, (newData) => {
   stockStore.updateRealtimeData(newData)
-}, { deep: true })
+})
 
 const newCode = ref('')
 const adding = ref(false)
@@ -109,27 +109,38 @@ const cardX = ref(12)
 const cardY = ref(42)
 
 function toggleMA(ma: number) {
-  const idx = activeMas.value.indexOf(ma)
-  if (idx >= 0) activeMas.value.splice(idx, 1)
-  else { activeMas.value.push(ma); activeMas.value.sort((a, b) => a - b) }
+  // 替换数组而非原地修改，让子组件的 watch 无需 deep 即可感知
+  activeMas.value = activeMas.value.includes(ma)
+    ? activeMas.value.filter((m) => m !== ma)
+    : [...activeMas.value, ma].sort((a, b) => a - b)
 }
 
-async function switchRange(days: number) {
+function switchRange(days: number) {
   chartDays.value = days
-  await reloadChart()
 }
 
-async function switchPeriod(period: 'm5' | 'day' | 'week' | 'month') {
+function switchPeriod(period: 'm5' | 'day' | 'week' | 'month') {
   chartPeriod.value = period
-  await reloadChart()
 }
 
-async function reloadChart() {
-  if (!stockStore.selectedCode) return
-  const data = await fetchKline(stockStore.selectedCode, chartPeriod.value, chartDays.value)
-  stockStore.setKlineData(data)
-  stockStore.setKlineLoading(klineLoading.value)
-}
+// 股票、周期、范围共用一个请求入口；失效请求不能覆盖当前图表。
+watch(
+  [() => stockStore.selectedCode, chartPeriod, chartDays],
+  async ([code, period, days], _previous, onCleanup) => {
+    const controller = new AbortController()
+    let active = true
+    onCleanup(() => { active = false; controller.abort() })
+    stockStore.setKlineData([])
+    stockStore.setKlineLoading(Boolean(code))
+    if (!code) return
+    const data = await fetchKline(code, period, days, controller.signal)
+    if (active) {
+      stockStore.setKlineData(data)
+      stockStore.setKlineLoading(false)
+    }
+  },
+  { immediate: true }
+)
 
 async function addStock() {
   const code = newCode.value.trim()
@@ -148,18 +159,14 @@ async function onSelectStock(code: string) {
 let watchStop: (() => void) | null = null
 
 onMounted(() => {
-  startPolling(stockStore.watchlist, 1000)
+  watchStop = watch(
+    () => [...stockStore.watchlist],
+    codes => startPolling(codes, 1000),
+    { immediate: true }
+  )
   if (!stockStore.selectedCode && stockStore.watchlist.length > 0) {
     onSelectStock(stockStore.watchlist[0])
   }
-  watchStop = watch(
-    () => stockStore.selectedCode,
-    (newCode) => {
-      if (newCode) {
-        fetchKline(newCode, chartPeriod.value, chartDays.value).then((data) => stockStore.setKlineData(data))
-      }
-    }
-  )
 })
 
 onUnmounted(() => {

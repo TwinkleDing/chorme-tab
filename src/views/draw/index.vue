@@ -56,7 +56,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Back, Right, View, Hide, ArrowLeft, Delete, Download, EditPen, Brush } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 import { PageBgImgList, BgSizeList } from '@/config/images'
 import useBackgroundStore from '@/stores/background'
 

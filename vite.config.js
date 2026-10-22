@@ -48,7 +48,7 @@ export default defineConfig({
 				rewrite: (path) => path.replace(/^\/api\/kline/, "/appstock/app/fqkline"),
 			},
 			"/api/mkline": {
-				target: "http://ifzq.gtimg.cn",
+				target: "https://ifzq.gtimg.cn",
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api\/mkline/, "/appstock/app/kline/mkline"),
 			},

@@ -36,12 +36,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, onMounted, onUnmounted, reactive } from 'vue'
 import { dateFormat } from '@/utils/date'
 import { setStorage, getStorage } from '@/utils/storage'
 import { FULL_SCREEN } from '@/utils/constants'
 import { BookList } from '@/config/bookmarks'
-import { BgSizeList } from '@/config/images'
+import { BgSizeList, PageBgImgList } from '@/config/images'
 import { TopLeft, BottomRight, Hide, TrendCharts } from '@element-plus/icons-vue'
 
 import useBackgroundStore from '@/stores/background'
@@ -77,6 +77,7 @@ const currentTime = ref(dateFormat(new Date(), 'yyyy-MM-dd hh:mm:ss'))
 let mouseDownTimer: ReturnType<typeof setTimeout> | null = null
 let controlDown = false
 let timeInterval: ReturnType<typeof setInterval> | null = null
+let pendingPosition: { target: 'box' | 'background'; left: string; top: string } | null = null
 
 // ---- stock ticker ----
 function toggleStockList() {
@@ -91,23 +92,29 @@ function domMouseDown(e: MouseEvent) {
     mouseDownTimer = setTimeout(() => { box.value!.style.backgroundColor = '#00000033' }, 100)
   }
 }
-function domMouseUp(e: MouseEvent) {
+function domMouseUp() {
   mouseUp()
   if (mouseDownTimer) { clearTimeout(mouseDownTimer); mouseDownTimer = null }
-  if (box.value?.contains(e.target as Node)) box.value.style.backgroundColor = 'transparent'
+  if (box.value) box.value.style.backgroundColor = 'transparent'
+  if (pendingPosition) {
+    const { target, left, top } = pendingPosition
+    if (target === 'box') { store.setSearchX(left); store.setSearchY(top) }
+    else { store.setBgX(left); store.setBgY(top) }
+    pendingPosition = null
+  }
 }
-function domMouseOut(e: MouseEvent) {
+function domMouseOut() {
+  domMouseUp()
   mouseOut()
-  if (box.value?.contains(e.target as Node)) box.value.style.backgroundColor = 'transparent'
 }
 
 function pageMove(e: MouseEvent) {
   if (box.value?.contains(e.target as Node)) {
     const pos = mouseMove(e, box.value)
-    if (pos) { store.setSearchX(pos.left); store.setSearchY(pos.top) }
+    if (pos) pendingPosition = { target: 'box', ...pos }
   } else if (bgView.value?.pageEl?.contains(e.target as Node)) {
     const pos = mouseMove(e, bgView.value.pageEl)
-    if (pos) { store.setBgX(pos.left); store.setBgY(pos.top) }
+    if (pos) pendingPosition = { target: 'background', ...pos }
   }
 }
 
@@ -132,8 +139,8 @@ function handleKeyDown(e: KeyboardEvent) {
   if (['Control', 'Alt', 'Meta', 'Shift'].includes(e.key)) {
     controlDown = true
   } else if (bgMode.value === FULL_SCREEN && (e.target as HTMLElement)?.localName === 'body') {
-    if (e.key === 'ArrowUp') changeImage(-1, 13)
-    if (e.key === 'ArrowDown') changeImage(1, 13)
+    if (e.key === 'ArrowUp') changeImage(-1, PageBgImgList.length)
+    if (e.key === 'ArrowDown') changeImage(1, PageBgImgList.length)
     if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
       const dir = e.key === 'ArrowLeft' ? -1 : 1
       let idx = sizeIndex.value + dir
@@ -165,18 +172,17 @@ onMounted(() => {
   startPolling(stockCodes, 1000)
   document.addEventListener('keydown', handleKeyDown)
   document.addEventListener('keyup', handleKeyUp)
+  document.addEventListener('mouseup', domMouseUp)
 })
 
 onUnmounted(() => {
+  domMouseUp()
   if (timeInterval) clearInterval(timeInterval)
   stopPolling()
   document.removeEventListener('keydown', handleKeyDown)
   document.removeEventListener('keyup', handleKeyUp)
+  document.removeEventListener('mouseup', domMouseUp)
 })
-
-watch(() => store.bgIndex, (v) => { bgIndex.value = v })
-watch(() => store.sizeIndex, (v) => { sizeIndex.value = v })
-watch(() => store.bgMode, (v) => { bgMode.value = v })
 </script>
 
 <style lang="scss" scoped>

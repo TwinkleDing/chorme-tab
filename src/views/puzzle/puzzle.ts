@@ -26,6 +26,7 @@ export default class Puzzle {
   private blockList: Block[] = [];
   private timer: ReturnType<typeof setInterval> | null = null;
   private onChange: (() => void) | null = null;
+  private onTick: (() => void) | null = null;
 
   public bestTime: number | null = null;
   public bestSteps: number | null = null;
@@ -119,10 +120,11 @@ export default class Puzzle {
     this.over = false;
 
     const startTime = Date.now();
+    // 计时只走 onTick 轻量回调，不触发 onChange（避免整体重建拼块列表）
     this.timer = setInterval(() => {
       this.elapsed = Date.now() - startTime;
-      this.notify();
-    }, 50);
+      if (this.onTick) this.onTick();
+    }, 100);
 
     this.notify();
   }
@@ -164,6 +166,8 @@ export default class Puzzle {
 
   public destroy(): void {
     this.clearTimer();
+    this.onChange = null;
+    this.onTick = null;
   }
 
   private clearTimer(): void {
@@ -179,6 +183,11 @@ export default class Puzzle {
 
   public puzzleChange(cb: (puzzle: Puzzle) => void): void {
     this.onChange = () => cb(this);
+  }
+
+  /** 计时器回调（100ms 一次，仅用于刷新用时显示） */
+  public timeChange(cb: () => void): void {
+    this.onTick = cb;
   }
 
   getTier(): number { return this.tier; }

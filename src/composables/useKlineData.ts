@@ -4,39 +4,42 @@ import type { KlineItem } from '@/types/stock'
 export function useKlineData() {
   const loading = ref(false)
   const error = ref('')
+  let requestId = 0
 
   const fetchKline = async (
     code: string,
     period: 'm5' | 'day' | 'week' | 'month' = 'day',
-    days = 60
+    days = 60,
+    signal?: AbortSignal
   ): Promise<KlineItem[]> => {
     if (!code) return []
+    const id = ++requestId
     loading.value = true
     error.value = ''
     try {
-      if (period === 'm5') return await fetchMinuteKline(code, days)
-      return await fetchDayKline(code, period, days)
+      if (period === 'm5') return await fetchMinuteKline(code, days, signal)
+      return await fetchDayKline(code, period, days, signal)
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : '获取K线数据失败'
-      error.value = message
+      if (id === requestId && !signal?.aborted) error.value = message
       return []
     } finally {
-      loading.value = false
+      if (id === requestId) loading.value = false
     }
   }
 
-  async function fetchDayKline(code: string, period: 'day' | 'week' | 'month', days: number): Promise<KlineItem[]> {
+  async function fetchDayKline(code: string, period: 'day' | 'week' | 'month', days: number, signal?: AbortSignal): Promise<KlineItem[]> {
     const base = import.meta.env.DEV
       ? '/api/kline'
       : 'https://web.ifzq.gtimg.cn/appstock/app/fqkline'
     const url = `${base}/get?param=${code},${period},,,${days},qfq`
-    const response = await fetch(url)
+    const response = await fetch(url, { signal })
     if (!response.ok) throw new Error('网络请求失败')
     const json = await response.json()
     if (json.code !== 0 || !json.data) throw new Error('数据获取失败')
     const stockData = json.data[code]
     if (!stockData) throw new Error('股票代码不存在')
-    const rawData = stockData.qfqday || stockData.day
+    const rawData = stockData[`qfq${period}`] || stockData[period]
     if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('暂无K线数据')
     return rawData.map((item: (string | number)[]) => ({
       time: item[0] as string,
@@ -48,18 +51,18 @@ export function useKlineData() {
     }))
   }
 
-  async function fetchMinuteKline(code: string, days: number): Promise<KlineItem[]> {
+  async function fetchMinuteKline(code: string, days: number, signal?: AbortSignal): Promise<KlineItem[]> {
     const base = import.meta.env.DEV
       ? '/api/mkline'
-      : 'http://ifzq.gtimg.cn/appstock/app/kline/mkline'
-    const url = `${base}?param=${code},m1,,,${days}`
-    const response = await fetch(url)
+      : 'https://ifzq.gtimg.cn/appstock/app/kline/mkline'
+    const url = `${base}?param=${code},m5,,,${days}`
+    const response = await fetch(url, { signal })
     if (!response.ok) throw new Error('网络请求失败')
     const json = await response.json()
     if (json.code !== 0 || !json.data) throw new Error('数据获取失败')
     const stockData = json.data[code]
     if (!stockData) throw new Error('股票代码不存在')
-    const rawData = stockData.m1
+    const rawData = stockData.m5
     if (!Array.isArray(rawData) || rawData.length === 0) throw new Error('暂无5分钟K线数据')
     return rawData.map((item: any[]) => {
       const rawTime = String(item[0])

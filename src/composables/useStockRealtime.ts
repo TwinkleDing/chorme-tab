@@ -38,36 +38,76 @@ export function useStockRealtime() {
   const data = ref<Record<string, StockData>>({})
   const loading = ref(false)
   let pollTimer: ReturnType<typeof setInterval> | null = null
+  let pollCodes: string[] = []
+  let pollIntervalMs = 1000
+  let visibilityHandler: (() => void) | null = null
+  let requestController: AbortController | null = null
 
   async function refresh(codes: string[]) {
-    if (codes.length === 0) return
+    // 页面不可见时跳过；上一轮请求未返回时跳过，避免请求堆积
+    if (codes.length === 0 || document.hidden) return
+    if (loading.value) return
     loading.value = true
+    const controller = new AbortController()
+    requestController = controller
     try {
-      const response = await fetch(`http://qt.gtimg.cn/q=${codes.join(',')}`)
+      const response = await fetch(`https://qt.gtimg.cn/q=${codes.join(',')}`, { signal: controller.signal })
       if (!response.ok) throw new Error('网络请求失败')
       const buffer = await response.arrayBuffer()
       const list = parseGtapiResponse(buffer)
       const map: Record<string, StockData> = {}
       list.forEach((s) => { map[s.code] = s })
-      data.value = map
+      if (!controller.signal.aborted) data.value = map
     } catch (e) {
-      console.error('获取实时数据失败:', e)
+      if (!controller.signal.aborted) console.error('获取实时数据失败:', e)
     } finally {
-      loading.value = false
+      if (requestController === controller) {
+        requestController = null
+        loading.value = false
+      }
+    }
+  }
+
+  function startInterval() {
+    stopInterval()
+    pollTimer = setInterval(() => refresh(pollCodes), pollIntervalMs)
+  }
+
+  function stopInterval() {
+    if (pollTimer !== null) {
+      clearInterval(pollTimer)
+      pollTimer = null
     }
   }
 
   function startPolling(codes: string[], intervalMs = 1000) {
     stopPolling()
     if (codes.length === 0) return
+    pollCodes = codes
+    pollIntervalMs = intervalMs
     refresh(codes)
-    pollTimer = setInterval(() => refresh(codes), intervalMs)
+    startInterval()
+
+    // 页面切到后台时暂停轮询，回到前台立即刷新并恢复
+    visibilityHandler = () => {
+      if (document.hidden) {
+        stopInterval()
+      } else {
+        refresh(pollCodes)
+        startInterval()
+      }
+    }
+    document.addEventListener('visibilitychange', visibilityHandler)
   }
 
   function stopPolling() {
-    if (pollTimer !== null) {
-      clearInterval(pollTimer)
-      pollTimer = null
+    stopInterval()
+    requestController?.abort()
+    requestController = null
+    loading.value = false
+    if (visibilityHandler !== null) {
+      document.removeEventListener('visibilitychange', visibilityHandler)
+      visibilityHandler = null
     }
   }
 

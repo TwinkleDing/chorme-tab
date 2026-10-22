@@ -292,11 +292,12 @@ function initChart() {
 }
 
 watch(
+  // data / mas 均为整体替换（见 stock 页 toggleMA、setKlineData），无需 deep
   () => [props.data, props.chartType, props.showVolume, props.mas] as const,
   () => {
     if (chart) buildChart()
   },
-  { deep: true, immediate: true }
+  { immediate: true }
 )
 
 onMounted(() => {
